@@ -7,6 +7,8 @@
 
 - [task-1](https://github.com/Coo3n/vibe-coding/tree/task-1) — минимальный
   Python CLI: запрос к LLM через API и вывод ответа в консоль.
+- [task-2](https://github.com/Coo3n/vibe-coding/tree/task-2) — сравнение контроля
+  ответа: формат JSON, лимит токенов, stop sequence и строгая JSON Schema.
 
 Новые задания будут добавляться в ветки `task-N`.
 
