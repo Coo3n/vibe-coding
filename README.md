@@ -1,26 +1,18 @@
-# Минимальный LLM CLI
+# vibe-coding
 
-Один запрос из консоли → POST в API → текст ответа в консоли.
-Ожидается OpenAI-совместимый API: Bearer-ключ, `model`, `messages`
-и ответ в `choices[0].message.content`.
-Совместимость конкретного WB API пока не подтверждена.
+Ветка `main` содержит только этот README. Код и инструкции к заданиям
+смотрите в отдельных ветках `task-1`, `task-2` и так далее.
 
-## Запуск
+## Задания
+
+- [task-1](https://github.com/Coo3n/vibe-coding/tree/task-1) — минимальный
+  Python CLI: запрос к LLM через API WB и вывод ответа в консоль.
+
+Новые задания будут добавляться в ветки `task-N`.
+
+Чтобы открыть первое задание локально:
 
 ```bash
-python -m pip install -r requirements.txt
-python main.py
+git fetch origin
+git switch task-1
 ```
-
-Перед запуском заполните `.env` рядом с `main.py`:
-
-```dotenv
-WB_API_KEY=ваш_ключ
-WB_API_URL=полный_URL_для_chat_completions
-WB_MODEL=точный_ID_модели
-```
-
-Ключ не включён в проект: добавьте свой локально. `.env` исключён из Git.
-При свежем клонировании создайте `.env` рядом с `main.py`.
-Переменные окружения имеют приоритет над `.env`.
-# vibe-coding
