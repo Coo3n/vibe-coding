@@ -6,7 +6,7 @@
 ## Задания
 
 - [task-1](https://github.com/Coo3n/vibe-coding/tree/task-1) — минимальный
-  Python CLI: запрос к LLM через API WB и вывод ответа в консоль.
+  Python CLI: запрос к LLM через API и вывод ответа в консоль.
 
 Новые задания будут добавляться в ветки `task-N`.
 
