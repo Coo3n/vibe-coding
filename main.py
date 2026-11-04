@@ -12,13 +12,13 @@ REQUEST_TIMEOUT = 60
 
 load_dotenv(ENV_FILE)
 
-API_KEY = os.getenv("WB_API_KEY", "").strip()
-API_URL = os.getenv("WB_API_URL", "").strip()
-MODEL = os.getenv("WB_MODEL", "").strip()
+API_KEY = os.getenv("LLM_API_KEY", "").strip()
+API_URL = os.getenv("LLM_API_URL", "").strip()
+MODEL = os.getenv("LLM_MODEL", "").strip()
 
 
 def main() -> int:
-    settings = {"WB_API_KEY": API_KEY, "WB_API_URL": API_URL, "WB_MODEL": MODEL}
+    settings = {"LLM_API_KEY": API_KEY, "LLM_API_URL": API_URL, "LLM_MODEL": MODEL}
     missing = [name for name, value in settings.items() if not value]
     if missing:
         print(f"Заполните в .env: {', '.join(missing)}", file=sys.stderr)
