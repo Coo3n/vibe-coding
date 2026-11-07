@@ -1,20 +1,29 @@
-# vibe-coding
+# Минимальный LLM CLI
 
-Ветка `main` содержит только этот README. Код и инструкции к заданиям
-смотрите в отдельных ветках `task-1`, `task-2` и так далее.
+Один запрос из консоли → POST в API → текст ответа в консоли.
+Ожидается OpenAI-совместимый API: Bearer-ключ, `model`, `messages`
+и ответ в `choices[0].message.content`.
+Провайдер, модель и ключ задаются через `.env`, без изменений кода.
 
-## Задания
+## Task 1
 
-- [task-1](https://github.com/Coo3n/vibe-coding/tree/task-1) — минимальный
-  Python CLI: запрос к LLM через API и вывод ответа в консоль.
-- [task-2](https://github.com/Coo3n/vibe-coding/tree/task-2) — сравнение контроля
-  ответа: формат JSON, лимит токенов, stop sequence и строгая JSON Schema.
+🎬 [Посмотреть видео демонстрации](results/task-1-demo.mov)
 
-Новые задания будут добавляться в ветки `task-N`.
-
-Чтобы открыть первое задание локально:
+## Запуск
 
 ```bash
-git fetch origin
-git switch task-1
+python -m pip install -r requirements.txt
+python main.py
 ```
+
+Перед запуском заполните `.env` рядом с `main.py`:
+
+```dotenv
+LLM_API_KEY=ваш_ключ
+LLM_API_URL=https://api.example.com/v1/chat/completions
+LLM_MODEL=идентификатор_модели
+```
+
+Ключ не включён в проект: добавьте свой локально. `.env` исключён из Git.
+При свежем клонировании создайте `.env` рядом с `main.py`.
+Переменные окружения имеют приоритет над `.env`.
