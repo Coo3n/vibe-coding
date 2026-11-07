@@ -19,11 +19,20 @@ API_URL = os.getenv("LLM_API_URL", "").strip()
 MODEL = os.getenv("LLM_MODEL", "").strip()
 REQUEST_TIMEOUT = 60
 RUNS = 3
-MAX_TOKENS = 256
-STOP = "<END>"
+MAX_TOKENS = 128
+STOP = "."
 PROMPT = (
-    "Дай три совета начинающему Python-разработчику. "
-    "У каждого совета должны быть короткий заголовок и объяснение в одном предложении."
+    "Я инженер-программист с несколькими годами опыта: проектирую сервисы, пишу код, "
+    "разбираю инциденты и отвечаю за работу продукта после релиза. В моей команде уже используют "
+    "ИИ для генерации кода, тестов и документации; задачи, за которые раньше платили мне, "
+    "выполняются быстрее и дешевле. Я боюсь, что часть инженерной работы автоматизируют и "
+    "мою текущую должность заменят. Мне не нужен лозунг «просто изучай ИИ» или обещание, "
+    "что инженеров никогда не заменят. Кем мне становиться и что делать уже сейчас, "
+    "чтобы оставаться востребованным, если написание кода перестанет быть главным преимуществом? "
+    "Предложи ровно три практических шага: на ближайший месяц, на полгода и на случай, "
+    "если моя роль действительно исчезнет. Учитывай техническую экспертизу, работу с людьми, "
+    "ответственность за результат и возможность сменить специализацию. "
+    "Для каждого шага дай короткий заголовок и объяснение одним предложением."
 )
 FORMAT = (
     'Ответь только JSON-объектом вида {"tips": [{"title": "...", "explanation": "..."}]}. '
@@ -55,22 +64,17 @@ VALIDATOR = Draft202012Validator(SCHEMA)
 
 
 def build_payload(mode, max_tokens):
-    messages = []
-    if mode != "baseline":
-        instruction = FORMAT
-        if mode == "stop":
-            instruction += f" После завершённого JSON выведи маркер {STOP}."
-        messages.append({"role": "system", "content": instruction})
-    messages.append({"role": "user", "content": PROMPT})
-    payload = {"model": MODEL, "messages": messages}
-    if mode in ("max_tokens", "stop", "schema"):
+    payload = {"model": MODEL, "messages": [{"role": "user", "content": PROMPT}]}
+    if mode == "format":
+        payload["messages"].insert(0, {"role": "system", "content": FORMAT})
+    if mode == "max_tokens":
         payload["max_tokens"] = max_tokens
     if mode == "stop":
         payload["stop"] = [STOP]
     if mode == "schema":
         payload["response_format"] = {
             "type": "json_schema",
-            "json_schema": {"name": "python_tips", "strict": True, "schema": SCHEMA},
+            "json_schema": {"name": "engineer_career_tips", "strict": True, "schema": SCHEMA},
         }
     return payload
 
@@ -134,37 +138,67 @@ def summarize(records):
     return summary
 
 
-def conclusions(summary):
-    lines = []
-    for mode, counts in summary.items():
+def print_report(report):
+    labels = {
+        "baseline": "Без ограничений",
+        "format": "Явный формат",
+        "max_tokens": "Лимит ответа",
+        "stop": "Стоп-маркер",
+        "schema": "Строгая схема",
+    }
+    controls = {
+        "baseline": "никаких клиентских ограничений",
+        "format": "только инструкция о JSON",
+        "max_tokens": f"только max_tokens={report.get('max_tokens', MAX_TOKENS)}",
+        "stop": f"только stop={STOP}",
+        "schema": "только response_format=json_schema, strict=true",
+    }
+    print("\n" + "═" * 72)
+    print("  ЭКСПЕРИМЕНТ / КАК ОГРАНИЧЕНИЯ МЕНЯЮТ ОТВЕТ")
+    print("  Один промпт · независимые запросы · один контроль на режим")
+    print("═" * 72)
+    print("\n  СВОДКА                       Запросы    JSON    Схема    API")
+    print("  " + "─" * 66)
+    for mode in MODES:
+        counts = report["summary"][mode]
         attempts = counts["attempts"]
         if not attempts:
             continue
         answers = attempts - counts["api_errors"]
-        lines.append(
-            f"{mode}: попыток {attempts}, ошибок API {counts['api_errors']}, "
-            f"JSON {counts['json_valid']}/{answers}, схема {counts['schema_valid']}/{answers}, "
-            f"обрезано {counts['truncated']}, отказов {counts['refusals']}."
-        )
-        if answers > counts["json_valid"]:
-            lines.append("  Есть ответы, которые json.loads не принимает, или пустой content.")
-        if counts["json_valid"] > counts["schema_valid"]:
-            lines.append("  Корректный JSON не гарантирует нужные поля, типы и число советов.")
-        if counts["truncated"]:
-            lines.append("  finish_reason=length: исчерпан лимит токенов; ответ может быть незавершён.")
-        if mode == "schema" and counts["api_errors"]:
-            lines.append("  Смотрите ошибки API: схема могла быть отвергнута, но это не доказано одним HTTP-кодом.")
-    lines.append(
-        "Вывод относится только к этим прогонам. Успешный JSON не доказывает поддержку "
-        "strict на стороне сервера; схема не гарантирует смысловую правильность. "
-        "finish_reason=stop не отличает stop sequence от естественного завершения."
-    )
-    return lines
+        json_count = f"{counts['json_valid']}/{answers}" if answers else "—"
+        schema_count = f"{counts['schema_valid']}/{answers}" if answers else "—"
+        print(f"  {labels[mode]:<29}{attempts:<10}{json_count:<8}"
+              f"{schema_count:<8}{counts['api_errors']}")
+
+    print("\n  ПРОВЕРКА ОТВЕТОВ")
+    for index, mode in enumerate(MODES, 1):
+        rows = [row for row in report["records"] if row["mode"] == mode]
+        if not rows:
+            continue
+        print(f"\n  {index:02} · {labels[mode].upper()}")
+        print(f"  Контроль: {controls[mode]}")
+        for row in rows:
+            print(f"\n  ╭─ ПРОГОН {row['run']} " + "─" * 53)
+            if "error" in row:
+                error = row["error"]
+                print(f"  │ ⚠ API: {error['kind']} {error.get('status', '')} {error.get('message', '')}".rstrip())
+                print("  ╰" + "─" * 66)
+                continue
+            print(f"  │ JSON: {'✓' if row['json_valid'] else '✗'}   "
+                  f"схема: {'✓' if row['schema_valid'] else '✗'}   "
+                  f"finish: {row['finish_reason']}")
+            if row.get("validation_error"):
+                print(f"  │ Причина: {row['validation_error']}")
+            print("  ├─ ПОЛНЫЙ ОТВЕТ " + "─" * 51)
+            for line in (row.get("content") or "∅ пустой ответ").split("\n"):
+                print(f"  │ {line}")
+            print("  ╰" + "─" * 66)
+
+    print("\n  Полные ответы и параметры запросов также сохранены в JSON-отчёте.")
 
 
 def save_report(path, report):
     report["summary"] = summarize(report["records"])
-    report["conclusions"] = conclusions(report["summary"])
     path.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(
         mode="w", encoding="utf-8", dir=path.parent,
@@ -236,10 +270,6 @@ def main():
                     record["error"] = {"kind": "response", "message": "Неожиданный формат ответа API."}
                 report["records"].append(record)
                 save_report(output, report)
-                print(f"\n[{mode} {run}/{args.runs}]")
-                print(record.get("content") or record.get("error") or "Пустой ответ")
-                if record.get("validation_error"):
-                    print(record["validation_error"])
                 if abort:
                     break
             if abort:
@@ -249,11 +279,8 @@ def main():
         report["interrupted"] = True
         abort = True
     save_report(output, report)
-    print("\nСравнение:")
-    print("\n".join(report["conclusions"]))
-    if abort:
-        print("Эксперимент прерван; сравнение всех режимов не выполнено.")
-    print(f"\nРезультаты: {output}")
+    print_report(report)
+    print(f"  Отчёт: {output}")
     return 2 if abort or any("error" in row for row in report["records"]) else 0
 
 

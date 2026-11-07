@@ -5,4 +5,5 @@ __pycache__/
 *.py[cod]
 .idea/
 .DS_Store
-results/
+results/*
+!results/demo.mov
