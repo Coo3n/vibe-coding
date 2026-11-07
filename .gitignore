@@ -5,6 +5,4 @@ __pycache__/
 *.py[cod]
 .idea/
 .DS_Store
-results/*
-!results/demo.mov
-!results/20261107T165101807474Z.json
+results/
