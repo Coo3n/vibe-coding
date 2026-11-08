@@ -1,0 +1,9 @@
+.env
+.env.*
+.venv/
+.idea/
+__pycache__/
+*.py[cod]
+.DS_Store
+results/[0-9]*/
+results/**/*.tmp

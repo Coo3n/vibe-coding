@@ -1,0 +1,1984 @@
+{
+  "started": "2026-11-08T23:13:28.786938+03:00",
+  "completed": true,
+  "models": [
+    {
+      "route": "llm-small",
+      "expected_model": "Qwen/Qwen3.8-27B-FP8",
+      "label": "Малая · Qwen 27B",
+      "display_name": "Qwen 3.8 27B"
+    },
+    {
+      "route": "llm-medium",
+      "expected_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "label": "Средняя · DeepSeek Flash",
+      "display_name": "DeepSeek V4 Flash"
+    },
+    {
+      "route": "coder",
+      "expected_model": "glm-53-flash",
+      "label": "Третья · GLM Flash",
+      "display_name": "GLM 5.3 Flash"
+    }
+  ],
+  "catalog": {
+    "object": "list",
+    "data": [
+      {
+        "id": "autocomplete",
+        "object": "model",
+        "created": 1794168753,
+        "owned_by": "kong",
+        "real_model": "Qwen2.5-Coder-7B-Instruct",
+        "max_tokens": 4096,
+        "max_model_len": 256000,
+        "context_window": 256000
+      },
+      {
+        "id": "claude-haiku-4",
+        "object": "model",
+        "created": 1794168753,
+        "owned_by": "kong",
+        "real_model": "Qwen/Qwen3.8-27B-FP8",
+        "max_tokens": 16192,
+        "max_model_len": 256000,
+        "context_window": 256000
+      },
+      {
+        "id": "claude-haiku-5",
+        "object": "model",
+        "created": 1794168753,
+        "owned_by": "kong",
+        "real_model": "Qwen/Qwen3.8-27B-FP8",
+        "max_tokens": 16192,
+        "max_model_len": 256000,
+        "context_window": 256000
+      },
+      {
+        "id": "claude-opus-5",
+        "object": "model",
+        "created": 1794168753,
+        "owned_by": "kong",
+        "real_model": "coder",
+        "max_tokens": 16192,
+        "max_model_len": 256000,
+        "context_window": 256000
+      },
+      {
+        "id": "claude-sonnet-5",
+        "object": "model",
+        "created": 1794168753,
+        "owned_by": "kong",
+        "real_model": "coder-medium",
+        "max_tokens": 16192,
+        "max_model_len": 256000,
+        "context_window": 256000
+      },
+      {
+        "id": "coder",
+        "object": "model",
+        "created": 1794168753,
+        "owned_by": "kong",
+        "real_model": "glm-53-flash",
+        "max_tokens": 16192,
+        "max_model_len": 262144,
+        "context_window": 262144
+      },
+      {
+        "id": "coder-medium",
+        "object": "model",
+        "created": 1794168753,
+        "owned_by": "kong",
+        "real_model": "deepseek-ai/DeepSeek-V4-Flash-Vision-Exp",
+        "max_tokens": 16192,
+        "max_model_len": 256000,
+        "context_window": 256000
+      },
+      {
+        "id": "coder-mini",
+        "object": "model",
+        "created": 1794168753,
+        "owned_by": "kong",
+        "real_model": "Qwen/Qwen3.8-27B-FP8",
+        "max_tokens": 16192,
+        "max_model_len": 150000,
+        "context_window": 150000
+      },
+      {
+        "id": "embedder-encoder",
+        "object": "model",
+        "created": 1794168753,
+        "owned_by": "kong",
+        "real_model": "embedder-v2",
+        "max_tokens": 4096,
+        "max_model_len": 256000,
+        "context_window": 256000
+      },
+      {
+        "id": "embeddings",
+        "object": "model",
+        "created": 1794168753,
+        "owned_by": "kong",
+        "real_model": "Qwen3-VL-Embedding-8B",
+        "max_tokens": 4096,
+        "max_model_len": 256000,
+        "context_window": 256000
+      },
+      {
+        "id": "embeddings-prod",
+        "object": "model",
+        "created": 1794168753,
+        "owned_by": "kong",
+        "real_model": "Qwen3-VL-Embedding-8B",
+        "max_tokens": 4096,
+        "max_model_len": 256000,
+        "context_window": 256000
+      },
+      {
+        "id": "llm-medium",
+        "object": "model",
+        "created": 1794168753,
+        "owned_by": "kong",
+        "real_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+        "max_tokens": 16192,
+        "max_model_len": 256000,
+        "context_window": 256000
+      },
+      {
+        "id": "llm-medium-prod",
+        "object": "model",
+        "created": 1794168753,
+        "owned_by": "kong",
+        "real_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+        "max_tokens": 16192,
+        "max_model_len": 256000,
+        "context_window": 256000
+      },
+      {
+        "id": "llm-small",
+        "object": "model",
+        "created": 1794168753,
+        "owned_by": "kong",
+        "real_model": "Qwen/Qwen3.8-27B-FP8",
+        "max_tokens": 16192,
+        "max_model_len": 262144,
+        "context_window": 262144
+      },
+      {
+        "id": "llm-small-prod",
+        "object": "model",
+        "created": 1794168753,
+        "owned_by": "kong",
+        "real_model": "Qwen/Qwen3.8-27B-FP8",
+        "max_tokens": 16192,
+        "max_model_len": 256000,
+        "context_window": 256000
+      },
+      {
+        "id": "rerank",
+        "object": "model",
+        "created": 1794168753,
+        "owned_by": "kong",
+        "real_model": "Qwen3-VL-Reranker-8B",
+        "max_tokens": 4096,
+        "max_model_len": 256000,
+        "context_window": 256000
+      },
+      {
+        "id": "rerank-prod",
+        "object": "model",
+        "created": 1794168753,
+        "owned_by": "kong",
+        "real_model": "Qwen3-VL-Reranker-8B",
+        "max_tokens": 4096,
+        "max_model_len": 256000,
+        "context_window": 256000
+      },
+      {
+        "id": "reviewer",
+        "object": "model",
+        "created": 1794168753,
+        "owned_by": "kong",
+        "real_model": "reviewer",
+        "max_tokens": 24576,
+        "max_model_len": 256000,
+        "context_window": 256000
+      }
+    ]
+  },
+  "dataset": {
+    "source_branch": "task-3",
+    "source_commit": "19e21cf09883acd80ae589d9af780bd8c669fc8f",
+    "source_task_count": 6,
+    "dataset_version": "day5-10-v2",
+    "added_tasks_note": "Для Day5 авторски добавлены четыре задачи: извлечение структурированных данных, понимание явного регламента, трассировка Python и планирование с зависимостями. Первые шесть задач сохранены из task-3 без изменений.",
+    "tasks": [
+      {
+        "id": "logic_4",
+        "prompt": "Трое жителей острова — А, Б и В — либо всегда говорят правду, либо всегда лгут. А говорит: «Б лжёт». Б говорит: «А и В одного типа (оба правдивы или оба лгут)». В говорит: «Б говорит правду». Кто из них говорит правду?\nA) только А  B) только Б  C) А и В  D) Б и В",
+        "answer": "A"
+      },
+      {
+        "id": "logic_5",
+        "prompt": "В одном из четырёх конвертов A, B, C, D лежит приз. Надписи на конвертах: A: «Приз в B или C»; B: «Приз не в A»; C: «Приз в D»; D: «Приз не в B». Ровно две надписи истинны. В каком конверте приз?\nA) A  B) B  C) C  D) D",
+        "answer": "B"
+      },
+      {
+        "id": "logic_6",
+        "prompt": "Трое жителей острова — А, Б и В — либо всегда говорят правду, либо всегда лгут. А говорит: «Б и В оба лгут». Б говорит: «А лжёт». В говорит: «Б лжёт». Кто говорит правду? Выберите единственный вариант, согласованный со всеми тремя высказываниями.\nA) только А  B) А и В  C) только Б  D) только В",
+        "answer": "C"
+      },
+      {
+        "id": "analysis_4",
+        "prompt": "В урне 4 красных и 3 синих шара. Случайно без возвращения вынимают два шара. Какова вероятность того, что оба шара одного цвета? Считайте все пары шаров равновероятными; порядок извлечения не важен.\nA) 1/2  B) 3/7  C) 4/7  D) 9/49",
+        "answer": "B"
+      },
+      {
+        "id": "analysis_5",
+        "prompt": "Одна труба наполняет пустой бак за 6 часов, вторая — за 8 часов, а открытый слив опорожняет полный бак за 12 часов. Сначала открыты обе трубы и слив; через 2 часа слив закрывают. Сколько часов пройдёт от начала до наполнения бака? Скорости постоянны и суммируются.\nA) 3 часа  B) 4 часа  C) 4,5 часа  D) 5 часов",
+        "answer": "B"
+      },
+      {
+        "id": "analysis_6",
+        "prompt": "Код — трёхзначное десятичное число без повторяющихся цифр: первая цифра не может быть нулём. Сколько таких кодов делятся на 5? Рассмотрите отдельно случаи последней цифры 0 и 5; число 0 как средняя цифра допустимо.\nA) 144  B) 128  C) 152  D) 136",
+        "answer": "D"
+      },
+      {
+        "id": "extraction_1",
+        "category": "structured_data_extraction",
+        "prompt": "Ниже приведены заказы. paid означает, что заказ оплачен, cancelled — что он отменён, amount_rub — полная сумма заказа в рублях. Найдите сумму amount_rub только для заказов, у которых paid равно true, а cancelled равно false. Других условий отбора нет; каждый заказ учитывается один раз.\n```json\n[\n  {\"id\": \"O1\", \"paid\": true, \"cancelled\": false, \"amount_rub\": 1200},\n  {\"id\": \"O2\", \"paid\": false, \"cancelled\": false, \"amount_rub\": 900},\n  {\"id\": \"O3\", \"paid\": true, \"cancelled\": true, \"amount_rub\": 500},\n  {\"id\": \"O4\", \"paid\": true, \"cancelled\": false, \"amount_rub\": 750},\n  {\"id\": \"O5\", \"paid\": false, \"cancelled\": true, \"amount_rub\": 400},\n  {\"id\": \"O6\", \"paid\": true, \"cancelled\": false, \"amount_rub\": 1300}\n]\n```\nA) 3750\nB) 4150\nC) 1950\nD) 3250",
+        "answer": "D",
+        "reference_solution": "Условиям paid=true и cancelled=false соответствуют только O1, O4 и O6. Сумма: 1200 + 750 + 1300 = 3250 рублей. Ответ D."
+      },
+      {
+        "id": "reading_1",
+        "category": "reading_comprehension",
+        "prompt": "Используйте только следующий внутренний регламент, без предположений о законодательстве или других правилах. Возврат разрешён тогда и только тогда, когда после покупки прошло от 0 до 14 полных дней включительно (days), товар не использован (unused=true), есть подтверждение покупки (proof=true) и товар не персонализирован (personalized=false). Покупка со скидкой (discounted=true) сама по себе не влияет на право возврата. Все сведения о трёх заявках полны и достоверны:\n```json\n[\n  {\"id\": \"R1\", \"days\": 15, \"unused\": true, \"proof\": true, \"personalized\": false, \"discounted\": false},\n  {\"id\": \"R2\", \"days\": 14, \"unused\": true, \"proof\": true, \"personalized\": false, \"discounted\": true},\n  {\"id\": \"R3\", \"days\": 3, \"unused\": true, \"proof\": true, \"personalized\": true, \"discounted\": false}\n]\n```\nВыберите полный список заявок, для которых возврат разрешён.\nA) R2\nB) R1, R2\nC) R2, R3\nD) R1, R2, R3",
+        "answer": "A",
+        "reference_solution": "R1 не проходит срок: 15 > 14. R2 проходит все четыре условия: 14-й день включён, а скидка не является запретом. R3 не проходит условие отсутствия персонализации. Разрешён только R2, ответ A."
+      },
+      {
+        "id": "python_trace_1",
+        "category": "python_code_tracing",
+        "prompt": "Каково значение result после выполнения следующего кода на Python 3? Срез списка создаёт поверхностную копию; row[:] создаёт отдельную копию соответствующего вложенного списка.\n```python\na = [[1], [2]]\nb = a\nc = a[:]\nd = [row[:] for row in a]\nb[0].append(3)\nb.append([6])\nc.append([4])\nd[1].append(5)\nresult = [len(a), len(c), len(a[0]), len(d[1]), len(d[0])]\n```\nA) [2, 3, 2, 2, 1]\nB) [3, 3, 2, 2, 1]\nC) [3, 3, 2, 2, 2]\nD) [3, 4, 2, 2, 1]",
+        "answer": "B",
+        "reference_solution": "b ссылается на тот же внешний список, что a. c — отдельный внешний список с общими исходными вложенными списками. d содержит отдельные копии вложенных списков. Поэтому b[0].append(3) меняет a[0] и c[0], но не d[0]. Добавление через b увеличивает длину a до 3, а отдельное добавление через c увеличивает длину c до 3. d[1] имеет длину 2. result = [3, 3, 2, 2, 1], ответ B."
+      },
+      {
+        "id": "scheduling_1",
+        "category": "dependency_scheduling",
+        "prompt": "Есть два одинаковых работника и пять задач. duration — длительность в часах, after — список задач, которые должны полностью завершиться до начала данной задачи. Время начинается с 0; каждая задача выполняется ровно один раз одним работником. Работник выполняет не более одной задачи одновременно. Прерывать, приостанавливать или передавать начатую задачу другому работнику нельзя (без вытеснения). Задачи без зависимостей доступны с момента 0; все данные указаны ниже, других ограничений и затрат времени нет. Начать следующую задачу можно в тот же момент, когда закончилась предыдущая.\n```json\n[\n  {\"id\": \"A\", \"duration\": 3, \"after\": []},\n  {\"id\": \"B\", \"duration\": 5, \"after\": []},\n  {\"id\": \"C\", \"duration\": 4, \"after\": [\"A\"]},\n  {\"id\": \"D\", \"duration\": 4, \"after\": [\"A\"]},\n  {\"id\": \"E\", \"duration\": 2, \"after\": [\"B\", \"C\", \"D\"]}\n]\n```\nЗа какое минимальное число часов от момента 0 можно завершить все задачи?\nA) 9\nB) 10\nC) 11\nD) 13",
+        "answer": "C",
+        "reference_solution": "Достижимое расписание: работник 1 выполняет A [0,3], C [3,7], E [9,11]; работник 2 выполняет B [0,5], D [5,9]. Для окончания раньше 11 задача E должна начаться раньше 9, то есть B, C и D должны закончиться раньше 9. C и D доступны не раньше 3 и для окончания раньше 9 должны перекрываться: последовательно их 8 часов заняли бы время минимум до 11. Значит они занимают обоих работников в некоторый интервал, начинающийся раньше 5 (каждая должна начаться раньше 5). Непрерывная B длительностью 5 не может завершиться до этого перекрытия и не может поместиться после него до момента 9: перекрытие заканчивается не раньше 7. Это невозможно. Минимум 11 часов, ответ C."
+      }
+    ]
+  },
+  "records": [
+    {
+      "route": "llm-small",
+      "expected_model": "Qwen/Qwen3.8-27B-FP8",
+      "task_id": "logic_4",
+      "expected_answer": "A",
+      "request": {
+        "model": "llm-small",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Трое жителей острова — А, Б и В — либо всегда говорят правду, либо всегда лгут. А говорит: «Б лжёт». Б говорит: «А и В одного типа (оба правдивы или оба лгут)». В говорит: «Б говорит правду». Кто из них говорит правду?\nA) только А  B) только Б  C) А и В  D) Б и В\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": false,
+      "eligible": false,
+      "correct": false,
+      "error": "API HTTP 400",
+      "seconds": 0.5338447920075851
+    },
+    {
+      "route": "llm-medium",
+      "expected_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "task_id": "logic_4",
+      "expected_answer": "A",
+      "request": {
+        "model": "llm-medium",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Трое жителей острова — А, Б и В — либо всегда говорят правду, либо всегда лгут. А говорит: «Б лжёт». Б говорит: «А и В одного типа (оба правдивы или оба лгут)». В говорит: «Б говорит правду». Кто из них говорит правду?\nA) только А  B) только Б  C) А и В  D) Б и В\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": true,
+      "eligible": true,
+      "correct": false,
+      "raw_response": {
+        "id": "a5074bb995e049c8a6a6b2c9d388d3f0",
+        "object": "chat.completion",
+        "created": 1794168809,
+        "model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"answer\": \"B\"}",
+              "reasoning_content": null,
+              "tool_calls": null
+            },
+            "logprobs": null,
+            "finish_reason": "stop",
+            "matched_stop": 1
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 153,
+          "total_tokens": 160,
+          "completion_tokens": 7,
+          "prompt_tokens_details": null,
+          "reasoning_tokens": 0
+        },
+        "metadata": {
+          "weight_version": "default"
+        }
+      },
+      "usage": {
+        "prompt_tokens": 153,
+        "total_tokens": 160,
+        "completion_tokens": 7,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "response_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "content": "{\"answer\": \"B\"}",
+      "finish_reason": "stop",
+      "json_valid": true,
+      "format_valid": true,
+      "validation_error": null,
+      "seconds": 0.6646287909970852
+    },
+    {
+      "route": "llm-small",
+      "expected_model": "Qwen/Qwen3.8-27B-FP8",
+      "task_id": "logic_5",
+      "expected_answer": "B",
+      "request": {
+        "model": "llm-small",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "В одном из четырёх конвертов A, B, C, D лежит приз. Надписи на конвертах: A: «Приз в B или C»; B: «Приз не в A»; C: «Приз в D»; D: «Приз не в B». Ровно две надписи истинны. В каком конверте приз?\nA) A  B) B  C) C  D) D\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": false,
+      "eligible": false,
+      "correct": false,
+      "error": "API HTTP 400",
+      "seconds": 0.4642575829930138
+    },
+    {
+      "route": "llm-medium",
+      "expected_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "task_id": "logic_5",
+      "expected_answer": "B",
+      "request": {
+        "model": "llm-medium",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "В одном из четырёх конвертов A, B, C, D лежит приз. Надписи на конвертах: A: «Приз в B или C»; B: «Приз не в A»; C: «Приз в D»; D: «Приз не в B». Ровно две надписи истинны. В каком конверте приз?\nA) A  B) B  C) C  D) D\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": true,
+      "eligible": true,
+      "correct": false,
+      "raw_response": {
+        "id": "3e880ccb986f40349ba8c39c2f5c7b4c",
+        "object": "chat.completion",
+        "created": 1794168810,
+        "model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"answer\": \"D\"}",
+              "reasoning_content": null,
+              "tool_calls": null
+            },
+            "logprobs": null,
+            "finish_reason": "stop",
+            "matched_stop": 1
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 162,
+          "total_tokens": 169,
+          "completion_tokens": 7,
+          "prompt_tokens_details": null,
+          "reasoning_tokens": 0
+        },
+        "metadata": {
+          "weight_version": "default"
+        }
+      },
+      "usage": {
+        "prompt_tokens": 162,
+        "total_tokens": 169,
+        "completion_tokens": 7,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "response_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "content": "{\"answer\": \"D\"}",
+      "finish_reason": "stop",
+      "json_valid": true,
+      "format_valid": true,
+      "validation_error": null,
+      "seconds": 0.6337298339931294
+    },
+    {
+      "route": "llm-small",
+      "expected_model": "Qwen/Qwen3.8-27B-FP8",
+      "task_id": "logic_6",
+      "expected_answer": "C",
+      "request": {
+        "model": "llm-small",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Трое жителей острова — А, Б и В — либо всегда говорят правду, либо всегда лгут. А говорит: «Б и В оба лгут». Б говорит: «А лжёт». В говорит: «Б лжёт». Кто говорит правду? Выберите единственный вариант, согласованный со всеми тремя высказываниями.\nA) только А  B) А и В  C) только Б  D) только В\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": false,
+      "eligible": false,
+      "correct": false,
+      "error": "API HTTP 400",
+      "seconds": 0.4190902080008527
+    },
+    {
+      "route": "llm-small",
+      "expected_model": "Qwen/Qwen3.8-27B-FP8",
+      "task_id": "analysis_4",
+      "expected_answer": "B",
+      "request": {
+        "model": "llm-small",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "В урне 4 красных и 3 синих шара. Случайно без возвращения вынимают два шара. Какова вероятность того, что оба шара одного цвета? Считайте все пары шаров равновероятными; порядок извлечения не важен.\nA) 1/2  B) 3/7  C) 4/7  D) 9/49\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": false,
+      "eligible": false,
+      "correct": false,
+      "error": "API HTTP 400",
+      "seconds": 0.5509809170034714
+    },
+    {
+      "route": "llm-medium",
+      "expected_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "task_id": "logic_6",
+      "expected_answer": "C",
+      "request": {
+        "model": "llm-medium",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Трое жителей острова — А, Б и В — либо всегда говорят правду, либо всегда лгут. А говорит: «Б и В оба лгут». Б говорит: «А лжёт». В говорит: «Б лжёт». Кто говорит правду? Выберите единственный вариант, согласованный со всеми тремя высказываниями.\nA) только А  B) А и В  C) только Б  D) только В\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": true,
+      "eligible": true,
+      "correct": false,
+      "raw_response": {
+        "id": "781b59de881f4e6ebf9f6cd665457914",
+        "object": "chat.completion",
+        "created": 1794168811,
+        "model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"answer\": \"D\"}",
+              "reasoning_content": null,
+              "tool_calls": null
+            },
+            "logprobs": null,
+            "finish_reason": "stop",
+            "matched_stop": 1
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 163,
+          "total_tokens": 170,
+          "completion_tokens": 7,
+          "prompt_tokens_details": null,
+          "reasoning_tokens": 0
+        },
+        "metadata": {
+          "weight_version": "default"
+        }
+      },
+      "usage": {
+        "prompt_tokens": 163,
+        "total_tokens": 170,
+        "completion_tokens": 7,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "response_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "content": "{\"answer\": \"D\"}",
+      "finish_reason": "stop",
+      "json_valid": true,
+      "format_valid": true,
+      "validation_error": null,
+      "seconds": 0.8565587920020334
+    },
+    {
+      "route": "coder",
+      "expected_model": "glm-53-flash",
+      "task_id": "logic_4",
+      "expected_answer": "A",
+      "request": {
+        "model": "coder",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Трое жителей острова — А, Б и В — либо всегда говорят правду, либо всегда лгут. А говорит: «Б лжёт». Б говорит: «А и В одного типа (оба правдивы или оба лгут)». В говорит: «Б говорит правду». Кто из них говорит правду?\nA) только А  B) только Б  C) А и В  D) Б и В\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": true,
+      "eligible": true,
+      "correct": true,
+      "raw_response": {
+        "id": "99821289f617485f95f0dfff9e66ff55",
+        "object": "chat.completion",
+        "created": 1794168811,
+        "model": "glm-53-flash",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"answer\": \"A\"}",
+              "reasoning_content": "A says B lies. B says A and V same type. V says B tells truth.\n\nCase A truthful: B lies. Then B's statement false: A and V different types. A truthful, so V liar. V says B truthful — false, consistent. So A truthful, B liar, V liar. Check: A says B lies — true. B says A and V same type — they're different (A truth, V liar) — false, B lies ✓. V says B truthful — false ✓. Consistent.\n\nCase A liar: B truthful. B says A and V same type — A liar, so V liar. V says B truthful — but V liar, so false — B lies, contradiction. So only A truthful → A.",
+              "tool_calls": null
+            },
+            "logprobs": null,
+            "finish_reason": "stop",
+            "matched_stop": 154827
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 152,
+          "total_tokens": 315,
+          "completion_tokens": 163,
+          "prompt_tokens_details": null,
+          "reasoning_tokens": 156
+        },
+        "metadata": {
+          "weight_version": "default",
+          "weight_versions": [
+            {
+              "version": "default",
+              "start": 0,
+              "end": 163
+            }
+          ]
+        }
+      },
+      "usage": {
+        "prompt_tokens": 152,
+        "total_tokens": 315,
+        "completion_tokens": 163,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 156
+      },
+      "response_model": "glm-53-flash",
+      "content": "{\"answer\": \"A\"}",
+      "finish_reason": "stop",
+      "json_valid": true,
+      "format_valid": true,
+      "validation_error": null,
+      "seconds": 2.2137919170054374
+    },
+    {
+      "route": "llm-small",
+      "expected_model": "Qwen/Qwen3.8-27B-FP8",
+      "task_id": "analysis_5",
+      "expected_answer": "B",
+      "request": {
+        "model": "llm-small",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Одна труба наполняет пустой бак за 6 часов, вторая — за 8 часов, а открытый слив опорожняет полный бак за 12 часов. Сначала открыты обе трубы и слив; через 2 часа слив закрывают. Сколько часов пройдёт от начала до наполнения бака? Скорости постоянны и суммируются.\nA) 3 часа  B) 4 часа  C) 4,5 часа  D) 5 часов\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": false,
+      "eligible": false,
+      "correct": false,
+      "error": "API HTTP 400",
+      "seconds": 0.5445452919957461
+    },
+    {
+      "route": "llm-medium",
+      "expected_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "task_id": "analysis_4",
+      "expected_answer": "B",
+      "request": {
+        "model": "llm-medium",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "В урне 4 красных и 3 синих шара. Случайно без возвращения вынимают два шара. Какова вероятность того, что оба шара одного цвета? Считайте все пары шаров равновероятными; порядок извлечения не важен.\nA) 1/2  B) 3/7  C) 4/7  D) 9/49\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": true,
+      "eligible": true,
+      "correct": true,
+      "raw_response": {
+        "id": "591cee8b86c140bcb4929217ce275833",
+        "object": "chat.completion",
+        "created": 1794168811,
+        "model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"answer\": \"B\"}",
+              "reasoning_content": null,
+              "tool_calls": null
+            },
+            "logprobs": null,
+            "finish_reason": "stop",
+            "matched_stop": 1
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 149,
+          "total_tokens": 156,
+          "completion_tokens": 7,
+          "prompt_tokens_details": null,
+          "reasoning_tokens": 0
+        },
+        "metadata": {
+          "weight_version": "default"
+        }
+      },
+      "usage": {
+        "prompt_tokens": 149,
+        "total_tokens": 156,
+        "completion_tokens": 7,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "response_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "content": "{\"answer\": \"B\"}",
+      "finish_reason": "stop",
+      "json_valid": true,
+      "format_valid": true,
+      "validation_error": null,
+      "seconds": 0.6949943330109818
+    },
+    {
+      "route": "llm-small",
+      "expected_model": "Qwen/Qwen3.8-27B-FP8",
+      "task_id": "analysis_6",
+      "expected_answer": "D",
+      "request": {
+        "model": "llm-small",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Код — трёхзначное десятичное число без повторяющихся цифр: первая цифра не может быть нулём. Сколько таких кодов делятся на 5? Рассмотрите отдельно случаи последней цифры 0 и 5; число 0 как средняя цифра допустимо.\nA) 144  B) 128  C) 152  D) 136\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": false,
+      "eligible": false,
+      "correct": false,
+      "error": "API HTTP 400",
+      "seconds": 0.5078384579974227
+    },
+    {
+      "route": "llm-medium",
+      "expected_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "task_id": "analysis_5",
+      "expected_answer": "B",
+      "request": {
+        "model": "llm-medium",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Одна труба наполняет пустой бак за 6 часов, вторая — за 8 часов, а открытый слив опорожняет полный бак за 12 часов. Сначала открыты обе трубы и слив; через 2 часа слив закрывают. Сколько часов пройдёт от начала до наполнения бака? Скорости постоянны и суммируются.\nA) 3 часа  B) 4 часа  C) 4,5 часа  D) 5 часов\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": true,
+      "eligible": true,
+      "correct": true,
+      "raw_response": {
+        "id": "289db874345c4f29bf3ac51fa4c5c7d2",
+        "object": "chat.completion",
+        "created": 1794168812,
+        "model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"answer\": \"B\"}",
+              "reasoning_content": null,
+              "tool_calls": null
+            },
+            "logprobs": null,
+            "finish_reason": "stop",
+            "matched_stop": 1
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 168,
+          "total_tokens": 175,
+          "completion_tokens": 7,
+          "prompt_tokens_details": null,
+          "reasoning_tokens": 0
+        },
+        "metadata": {
+          "weight_version": "default"
+        }
+      },
+      "usage": {
+        "prompt_tokens": 168,
+        "total_tokens": 175,
+        "completion_tokens": 7,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "response_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "content": "{\"answer\": \"B\"}",
+      "finish_reason": "stop",
+      "json_valid": true,
+      "format_valid": true,
+      "validation_error": null,
+      "seconds": 0.7490297500044107
+    },
+    {
+      "route": "llm-small",
+      "expected_model": "Qwen/Qwen3.8-27B-FP8",
+      "task_id": "extraction_1",
+      "expected_answer": "D",
+      "request": {
+        "model": "llm-small",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Ниже приведены заказы. paid означает, что заказ оплачен, cancelled — что он отменён, amount_rub — полная сумма заказа в рублях. Найдите сумму amount_rub только для заказов, у которых paid равно true, а cancelled равно false. Других условий отбора нет; каждый заказ учитывается один раз.\n```json\n[\n  {\"id\": \"O1\", \"paid\": true, \"cancelled\": false, \"amount_rub\": 1200},\n  {\"id\": \"O2\", \"paid\": false, \"cancelled\": false, \"amount_rub\": 900},\n  {\"id\": \"O3\", \"paid\": true, \"cancelled\": true, \"amount_rub\": 500},\n  {\"id\": \"O4\", \"paid\": true, \"cancelled\": false, \"amount_rub\": 750},\n  {\"id\": \"O5\", \"paid\": false, \"cancelled\": true, \"amount_rub\": 400},\n  {\"id\": \"O6\", \"paid\": true, \"cancelled\": false, \"amount_rub\": 1300}\n]\n```\nA) 3750\nB) 4150\nC) 1950\nD) 3250\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": false,
+      "eligible": false,
+      "correct": false,
+      "error": "API HTTP 400",
+      "seconds": 0.6642064159968868
+    },
+    {
+      "route": "llm-small",
+      "expected_model": "Qwen/Qwen3.8-27B-FP8",
+      "task_id": "reading_1",
+      "expected_answer": "A",
+      "request": {
+        "model": "llm-small",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Используйте только следующий внутренний регламент, без предположений о законодательстве или других правилах. Возврат разрешён тогда и только тогда, когда после покупки прошло от 0 до 14 полных дней включительно (days), товар не использован (unused=true), есть подтверждение покупки (proof=true) и товар не персонализирован (personalized=false). Покупка со скидкой (discounted=true) сама по себе не влияет на право возврата. Все сведения о трёх заявках полны и достоверны:\n```json\n[\n  {\"id\": \"R1\", \"days\": 15, \"unused\": true, \"proof\": true, \"personalized\": false, \"discounted\": false},\n  {\"id\": \"R2\", \"days\": 14, \"unused\": true, \"proof\": true, \"personalized\": false, \"discounted\": true},\n  {\"id\": \"R3\", \"days\": 3, \"unused\": true, \"proof\": true, \"personalized\": true, \"discounted\": false}\n]\n```\nВыберите полный список заявок, для которых возврат разрешён.\nA) R2\nB) R1, R2\nC) R2, R3\nD) R1, R2, R3\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": false,
+      "eligible": false,
+      "correct": false,
+      "error": "API HTTP 400",
+      "seconds": 0.5128673340077512
+    },
+    {
+      "route": "llm-medium",
+      "expected_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "task_id": "analysis_6",
+      "expected_answer": "D",
+      "request": {
+        "model": "llm-medium",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Код — трёхзначное десятичное число без повторяющихся цифр: первая цифра не может быть нулём. Сколько таких кодов делятся на 5? Рассмотрите отдельно случаи последней цифры 0 и 5; число 0 как средняя цифра допустимо.\nA) 144  B) 128  C) 152  D) 136\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": true,
+      "eligible": true,
+      "correct": true,
+      "raw_response": {
+        "id": "e7d8608c140e4ae98043201de76b36de",
+        "object": "chat.completion",
+        "created": 1794168813,
+        "model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"answer\": \"D\"}",
+              "reasoning_content": null,
+              "tool_calls": null
+            },
+            "logprobs": null,
+            "finish_reason": "stop",
+            "matched_stop": 1
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 144,
+          "total_tokens": 151,
+          "completion_tokens": 7,
+          "prompt_tokens_details": null,
+          "reasoning_tokens": 0
+        },
+        "metadata": {
+          "weight_version": "default"
+        }
+      },
+      "usage": {
+        "prompt_tokens": 144,
+        "total_tokens": 151,
+        "completion_tokens": 7,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "response_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "content": "{\"answer\": \"D\"}",
+      "finish_reason": "stop",
+      "json_valid": true,
+      "format_valid": true,
+      "validation_error": null,
+      "seconds": 0.7538527500000782
+    },
+    {
+      "route": "coder",
+      "expected_model": "glm-53-flash",
+      "task_id": "logic_5",
+      "expected_answer": "B",
+      "request": {
+        "model": "coder",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "В одном из четырёх конвертов A, B, C, D лежит приз. Надписи на конвертах: A: «Приз в B или C»; B: «Приз не в A»; C: «Приз в D»; D: «Приз не в B». Ровно две надписи истинны. В каком конверте приз?\nA) A  B) B  C) C  D) D\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": true,
+      "eligible": true,
+      "correct": true,
+      "raw_response": {
+        "id": "a89b9e9377104a9abdd71e22fea3b2bf",
+        "object": "chat.completion",
+        "created": 1794168812,
+        "model": "glm-53-flash",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"answer\": \"B\"}",
+              "reasoning_content": "Check each case.\n\nPrize in A: A's statement false (prize not in B or C). B: \"prize not in A\" false. C: \"prize in D\" false. D: \"prize not in B\" true. Only 1 true. No.\n\nPrize in B: A: true (B or C). B: \"not in A\" true. C: false. D: \"not in B\" false. 2 true. Yes.\n\nPrize in C: A true, B true, C false, D true → 3 true. No.\n\nPrize in D: A false, B true, C true, D true → 3. No.\n\nAnswer B.",
+              "tool_calls": null
+            },
+            "logprobs": null,
+            "finish_reason": "stop",
+            "matched_stop": 154827
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 156,
+          "total_tokens": 314,
+          "completion_tokens": 158,
+          "prompt_tokens_details": null,
+          "reasoning_tokens": 151
+        },
+        "metadata": {
+          "weight_version": "default",
+          "weight_versions": [
+            {
+              "version": "default",
+              "start": 0,
+              "end": 158
+            }
+          ]
+        }
+      },
+      "usage": {
+        "prompt_tokens": 156,
+        "total_tokens": 314,
+        "completion_tokens": 158,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 151
+      },
+      "response_model": "glm-53-flash",
+      "content": "{\"answer\": \"B\"}",
+      "finish_reason": "stop",
+      "json_valid": true,
+      "format_valid": true,
+      "validation_error": null,
+      "seconds": 2.1791105829906883
+    },
+    {
+      "route": "llm-small",
+      "expected_model": "Qwen/Qwen3.8-27B-FP8",
+      "task_id": "python_trace_1",
+      "expected_answer": "B",
+      "request": {
+        "model": "llm-small",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Каково значение result после выполнения следующего кода на Python 3? Срез списка создаёт поверхностную копию; row[:] создаёт отдельную копию соответствующего вложенного списка.\n```python\na = [[1], [2]]\nb = a\nc = a[:]\nd = [row[:] for row in a]\nb[0].append(3)\nb.append([6])\nc.append([4])\nd[1].append(5)\nresult = [len(a), len(c), len(a[0]), len(d[1]), len(d[0])]\n```\nA) [2, 3, 2, 2, 1]\nB) [3, 3, 2, 2, 1]\nC) [3, 3, 2, 2, 2]\nD) [3, 4, 2, 2, 1]\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": false,
+      "eligible": false,
+      "correct": false,
+      "error": "API HTTP 400",
+      "seconds": 0.4693972090026364
+    },
+    {
+      "route": "llm-medium",
+      "expected_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "task_id": "extraction_1",
+      "expected_answer": "D",
+      "request": {
+        "model": "llm-medium",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Ниже приведены заказы. paid означает, что заказ оплачен, cancelled — что он отменён, amount_rub — полная сумма заказа в рублях. Найдите сумму amount_rub только для заказов, у которых paid равно true, а cancelled равно false. Других условий отбора нет; каждый заказ учитывается один раз.\n```json\n[\n  {\"id\": \"O1\", \"paid\": true, \"cancelled\": false, \"amount_rub\": 1200},\n  {\"id\": \"O2\", \"paid\": false, \"cancelled\": false, \"amount_rub\": 900},\n  {\"id\": \"O3\", \"paid\": true, \"cancelled\": true, \"amount_rub\": 500},\n  {\"id\": \"O4\", \"paid\": true, \"cancelled\": false, \"amount_rub\": 750},\n  {\"id\": \"O5\", \"paid\": false, \"cancelled\": true, \"amount_rub\": 400},\n  {\"id\": \"O6\", \"paid\": true, \"cancelled\": false, \"amount_rub\": 1300}\n]\n```\nA) 3750\nB) 4150\nC) 1950\nD) 3250\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": true,
+      "eligible": true,
+      "correct": true,
+      "raw_response": {
+        "id": "fdf702d71c594537908ebafbc6000d28",
+        "object": "chat.completion",
+        "created": 1794168813,
+        "model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"answer\": \"D\"}",
+              "reasoning_content": null,
+              "tool_calls": null
+            },
+            "logprobs": null,
+            "finish_reason": "stop",
+            "matched_stop": 1
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 332,
+          "total_tokens": 339,
+          "completion_tokens": 7,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "reasoning_tokens": 0
+        },
+        "metadata": {
+          "weight_version": "default"
+        }
+      },
+      "usage": {
+        "prompt_tokens": 332,
+        "total_tokens": 339,
+        "completion_tokens": 7,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "reasoning_tokens": 0
+      },
+      "response_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "content": "{\"answer\": \"D\"}",
+      "finish_reason": "stop",
+      "json_valid": true,
+      "format_valid": true,
+      "validation_error": null,
+      "seconds": 0.6816815000056522
+    },
+    {
+      "route": "llm-small",
+      "expected_model": "Qwen/Qwen3.8-27B-FP8",
+      "task_id": "scheduling_1",
+      "expected_answer": "C",
+      "request": {
+        "model": "llm-small",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Есть два одинаковых работника и пять задач. duration — длительность в часах, after — список задач, которые должны полностью завершиться до начала данной задачи. Время начинается с 0; каждая задача выполняется ровно один раз одним работником. Работник выполняет не более одной задачи одновременно. Прерывать, приостанавливать или передавать начатую задачу другому работнику нельзя (без вытеснения). Задачи без зависимостей доступны с момента 0; все данные указаны ниже, других ограничений и затрат времени нет. Начать следующую задачу можно в тот же момент, когда закончилась предыдущая.\n```json\n[\n  {\"id\": \"A\", \"duration\": 3, \"after\": []},\n  {\"id\": \"B\", \"duration\": 5, \"after\": []},\n  {\"id\": \"C\", \"duration\": 4, \"after\": [\"A\"]},\n  {\"id\": \"D\", \"duration\": 4, \"after\": [\"A\"]},\n  {\"id\": \"E\", \"duration\": 2, \"after\": [\"B\", \"C\", \"D\"]}\n]\n```\nЗа какое минимальное число часов от момента 0 можно завершить все задачи?\nA) 9\nB) 10\nC) 11\nD) 13\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": false,
+      "eligible": false,
+      "correct": false,
+      "error": "API HTTP 400",
+      "seconds": 0.610307290990022
+    },
+    {
+      "route": "llm-medium",
+      "expected_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "task_id": "reading_1",
+      "expected_answer": "A",
+      "request": {
+        "model": "llm-medium",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Используйте только следующий внутренний регламент, без предположений о законодательстве или других правилах. Возврат разрешён тогда и только тогда, когда после покупки прошло от 0 до 14 полных дней включительно (days), товар не использован (unused=true), есть подтверждение покупки (proof=true) и товар не персонализирован (personalized=false). Покупка со скидкой (discounted=true) сама по себе не влияет на право возврата. Все сведения о трёх заявках полны и достоверны:\n```json\n[\n  {\"id\": \"R1\", \"days\": 15, \"unused\": true, \"proof\": true, \"personalized\": false, \"discounted\": false},\n  {\"id\": \"R2\", \"days\": 14, \"unused\": true, \"proof\": true, \"personalized\": false, \"discounted\": true},\n  {\"id\": \"R3\", \"days\": 3, \"unused\": true, \"proof\": true, \"personalized\": true, \"discounted\": false}\n]\n```\nВыберите полный список заявок, для которых возврат разрешён.\nA) R2\nB) R1, R2\nC) R2, R3\nD) R1, R2, R3\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": true,
+      "eligible": true,
+      "correct": true,
+      "raw_response": {
+        "id": "c9edd505c3bd41d7b8f2598b6c6dfb1a",
+        "object": "chat.completion",
+        "created": 1794168814,
+        "model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"answer\": \"A\"}",
+              "reasoning_content": null,
+              "tool_calls": null
+            },
+            "logprobs": null,
+            "finish_reason": "stop",
+            "matched_stop": 1
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 357,
+          "total_tokens": 364,
+          "completion_tokens": 7,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "reasoning_tokens": 0
+        },
+        "metadata": {
+          "weight_version": "default"
+        }
+      },
+      "usage": {
+        "prompt_tokens": 357,
+        "total_tokens": 364,
+        "completion_tokens": 7,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "reasoning_tokens": 0
+      },
+      "response_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "content": "{\"answer\": \"A\"}",
+      "finish_reason": "stop",
+      "json_valid": true,
+      "format_valid": true,
+      "validation_error": null,
+      "seconds": 0.6148243750067195
+    },
+    {
+      "route": "llm-medium",
+      "expected_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "task_id": "python_trace_1",
+      "expected_answer": "B",
+      "request": {
+        "model": "llm-medium",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Каково значение result после выполнения следующего кода на Python 3? Срез списка создаёт поверхностную копию; row[:] создаёт отдельную копию соответствующего вложенного списка.\n```python\na = [[1], [2]]\nb = a\nc = a[:]\nd = [row[:] for row in a]\nb[0].append(3)\nb.append([6])\nc.append([4])\nd[1].append(5)\nresult = [len(a), len(c), len(a[0]), len(d[1]), len(d[0])]\n```\nA) [2, 3, 2, 2, 1]\nB) [3, 3, 2, 2, 1]\nC) [3, 3, 2, 2, 2]\nD) [3, 4, 2, 2, 1]\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": true,
+      "eligible": true,
+      "correct": false,
+      "raw_response": {
+        "id": "644210e11049460ea18cbaa912f658e0",
+        "object": "chat.completion",
+        "created": 1794168815,
+        "model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"answer\": \"A\"}",
+              "reasoning_content": null,
+              "tool_calls": null
+            },
+            "logprobs": null,
+            "finish_reason": "stop",
+            "matched_stop": 1
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 253,
+          "total_tokens": 260,
+          "completion_tokens": 7,
+          "prompt_tokens_details": null,
+          "reasoning_tokens": 0
+        },
+        "metadata": {
+          "weight_version": "default"
+        }
+      },
+      "usage": {
+        "prompt_tokens": 253,
+        "total_tokens": 260,
+        "completion_tokens": 7,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "response_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "content": "{\"answer\": \"A\"}",
+      "finish_reason": "stop",
+      "json_valid": true,
+      "format_valid": true,
+      "validation_error": null,
+      "seconds": 0.6730045000003884
+    },
+    {
+      "route": "coder",
+      "expected_model": "glm-53-flash",
+      "task_id": "logic_6",
+      "expected_answer": "C",
+      "request": {
+        "model": "coder",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Трое жителей острова — А, Б и В — либо всегда говорят правду, либо всегда лгут. А говорит: «Б и В оба лгут». Б говорит: «А лжёт». В говорит: «Б лжёт». Кто говорит правду? Выберите единственный вариант, согласованный со всеми тремя высказываниями.\nA) только А  B) А и В  C) только Б  D) только В\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": true,
+      "eligible": true,
+      "correct": true,
+      "raw_response": {
+        "id": "587834a6067a4988950a57f9aff95efa",
+        "object": "chat.completion",
+        "created": 1794168815,
+        "model": "glm-53-flash",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"answer\": \"C\"}",
+              "reasoning_content": "A says B and V both lie. B says A lies. V says B lies.\n\nCase A truthful: B and V both liars. Then B's statement \"A lies\" is false — consistent (A truthful). V's statement \"B lies\" — B is liar, so V's statement is true, but V must be liar. Contradiction.\n\nCase A liar: not both B and V lie, so at least one of B, V truthful. B says \"A lies\" — true, so B truthful. V says \"B lies\" — false, so V liar. Consistent: A liar, B truthful, V liar. Check A's statement: \"B and V both lie\" — false since B truthful. Good.\n\nAnswer: C.",
+              "tool_calls": null
+            },
+            "logprobs": null,
+            "finish_reason": "stop",
+            "matched_stop": 154827
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 157,
+          "total_tokens": 322,
+          "completion_tokens": 165,
+          "prompt_tokens_details": null,
+          "reasoning_tokens": 158
+        },
+        "metadata": {
+          "weight_version": "default",
+          "weight_versions": [
+            {
+              "version": "default",
+              "start": 0,
+              "end": 165
+            }
+          ]
+        }
+      },
+      "usage": {
+        "prompt_tokens": 157,
+        "total_tokens": 322,
+        "completion_tokens": 165,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 158
+      },
+      "response_model": "glm-53-flash",
+      "content": "{\"answer\": \"C\"}",
+      "finish_reason": "stop",
+      "json_valid": true,
+      "format_valid": true,
+      "validation_error": null,
+      "seconds": 2.0984564579994185
+    },
+    {
+      "route": "llm-medium",
+      "expected_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "task_id": "scheduling_1",
+      "expected_answer": "C",
+      "request": {
+        "model": "llm-medium",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Есть два одинаковых работника и пять задач. duration — длительность в часах, after — список задач, которые должны полностью завершиться до начала данной задачи. Время начинается с 0; каждая задача выполняется ровно один раз одним работником. Работник выполняет не более одной задачи одновременно. Прерывать, приостанавливать или передавать начатую задачу другому работнику нельзя (без вытеснения). Задачи без зависимостей доступны с момента 0; все данные указаны ниже, других ограничений и затрат времени нет. Начать следующую задачу можно в тот же момент, когда закончилась предыдущая.\n```json\n[\n  {\"id\": \"A\", \"duration\": 3, \"after\": []},\n  {\"id\": \"B\", \"duration\": 5, \"after\": []},\n  {\"id\": \"C\", \"duration\": 4, \"after\": [\"A\"]},\n  {\"id\": \"D\", \"duration\": 4, \"after\": [\"A\"]},\n  {\"id\": \"E\", \"duration\": 2, \"after\": [\"B\", \"C\", \"D\"]}\n]\n```\nЗа какое минимальное число часов от момента 0 можно завершить все задачи?\nA) 9\nB) 10\nC) 11\nD) 13\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": true,
+      "eligible": true,
+      "correct": false,
+      "raw_response": {
+        "id": "4984d268c9dc499ea84dda4cf1afbd69",
+        "object": "chat.completion",
+        "created": 1794168815,
+        "model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"answer\": \"B\"}",
+              "reasoning_content": null,
+              "tool_calls": null
+            },
+            "logprobs": null,
+            "finish_reason": "stop",
+            "matched_stop": 1
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 345,
+          "total_tokens": 352,
+          "completion_tokens": 7,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "reasoning_tokens": 0
+        },
+        "metadata": {
+          "weight_version": "default"
+        }
+      },
+      "usage": {
+        "prompt_tokens": 345,
+        "total_tokens": 352,
+        "completion_tokens": 7,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "reasoning_tokens": 0
+      },
+      "response_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "content": "{\"answer\": \"B\"}",
+      "finish_reason": "stop",
+      "json_valid": true,
+      "format_valid": true,
+      "validation_error": null,
+      "seconds": 0.7464423330093268
+    },
+    {
+      "route": "coder",
+      "expected_model": "glm-53-flash",
+      "task_id": "analysis_4",
+      "expected_answer": "B",
+      "request": {
+        "model": "coder",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "В урне 4 красных и 3 синих шара. Случайно без возвращения вынимают два шара. Какова вероятность того, что оба шара одного цвета? Считайте все пары шаров равновероятными; порядок извлечения не важен.\nA) 1/2  B) 3/7  C) 4/7  D) 9/49\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": true,
+      "eligible": true,
+      "correct": true,
+      "raw_response": {
+        "id": "d9c80e886f884c0384b25c4fb8cc16e7",
+        "object": "chat.completion",
+        "created": 1794168816,
+        "model": "glm-53-flash",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"answer\": \"B\"}",
+              "reasoning_content": "C(4,2)+C(3,2)=6+3=9, C(7,2)=21, 9/21=3/7. B.",
+              "tool_calls": null
+            },
+            "logprobs": null,
+            "finish_reason": "stop",
+            "matched_stop": 154827
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 152,
+          "total_tokens": 197,
+          "completion_tokens": 45,
+          "prompt_tokens_details": null,
+          "reasoning_tokens": 38
+        },
+        "metadata": {
+          "weight_version": "default",
+          "weight_versions": [
+            {
+              "version": "default",
+              "start": 0,
+              "end": 45
+            }
+          ]
+        }
+      },
+      "usage": {
+        "prompt_tokens": 152,
+        "total_tokens": 197,
+        "completion_tokens": 45,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 38
+      },
+      "response_model": "glm-53-flash",
+      "content": "{\"answer\": \"B\"}",
+      "finish_reason": "stop",
+      "json_valid": true,
+      "format_valid": true,
+      "validation_error": null,
+      "seconds": 1.2926399999996647
+    },
+    {
+      "route": "coder",
+      "expected_model": "glm-53-flash",
+      "task_id": "analysis_5",
+      "expected_answer": "B",
+      "request": {
+        "model": "coder",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Одна труба наполняет пустой бак за 6 часов, вторая — за 8 часов, а открытый слив опорожняет полный бак за 12 часов. Сначала открыты обе трубы и слив; через 2 часа слив закрывают. Сколько часов пройдёт от начала до наполнения бака? Скорости постоянны и суммируются.\nA) 3 часа  B) 4 часа  C) 4,5 часа  D) 5 часов\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": true,
+      "eligible": true,
+      "correct": true,
+      "raw_response": {
+        "id": "9147b3f37818458297d610e4ea24a001",
+        "object": "chat.completion",
+        "created": 1794168818,
+        "model": "glm-53-flash",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"answer\": \"B\"}",
+              "reasoning_content": "Rates: 1/6+1/8−1/12 = 4/24+3/24−2/24=5/24. In 2h: 10/24=5/12. Remaining 7/12 at rate 1/6+1/8=7/24 → time = (7/12)/(7/24)=2. Total 4 hours. B.",
+              "tool_calls": null
+            },
+            "logprobs": null,
+            "finish_reason": "stop",
+            "matched_stop": 154827
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 164,
+          "total_tokens": 258,
+          "completion_tokens": 94,
+          "prompt_tokens_details": null,
+          "reasoning_tokens": 87
+        },
+        "metadata": {
+          "weight_version": "default",
+          "weight_versions": [
+            {
+              "version": "default",
+              "start": 0,
+              "end": 94
+            }
+          ]
+        }
+      },
+      "usage": {
+        "prompt_tokens": 164,
+        "total_tokens": 258,
+        "completion_tokens": 94,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 87
+      },
+      "response_model": "glm-53-flash",
+      "content": "{\"answer\": \"B\"}",
+      "finish_reason": "stop",
+      "json_valid": true,
+      "format_valid": true,
+      "validation_error": null,
+      "seconds": 1.5853489160072058
+    },
+    {
+      "route": "coder",
+      "expected_model": "glm-53-flash",
+      "task_id": "analysis_6",
+      "expected_answer": "D",
+      "request": {
+        "model": "coder",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Код — трёхзначное десятичное число без повторяющихся цифр: первая цифра не может быть нулём. Сколько таких кодов делятся на 5? Рассмотрите отдельно случаи последней цифры 0 и 5; число 0 как средняя цифра допустимо.\nA) 144  B) 128  C) 152  D) 136\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": true,
+      "eligible": true,
+      "correct": true,
+      "raw_response": {
+        "id": "3cba3274eb4c4559902492883b6ddf87",
+        "object": "chat.completion",
+        "created": 1794168820,
+        "model": "glm-53-flash",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"answer\":\"D\"}",
+              "reasoning_content": "Last digit 0: first digit 1-9 (9), middle any of remaining 8 → 72.\nLast digit 5: first digit 1-9 except 5 → 8, middle any remaining 8 → 64. Total 136.",
+              "tool_calls": null
+            },
+            "logprobs": null,
+            "finish_reason": "stop",
+            "matched_stop": 154827
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 145,
+          "total_tokens": 207,
+          "completion_tokens": 62,
+          "prompt_tokens_details": null,
+          "reasoning_tokens": 56
+        },
+        "metadata": {
+          "weight_version": "default",
+          "weight_versions": [
+            {
+              "version": "default",
+              "start": 0,
+              "end": 62
+            }
+          ]
+        }
+      },
+      "usage": {
+        "prompt_tokens": 145,
+        "total_tokens": 207,
+        "completion_tokens": 62,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 56
+      },
+      "response_model": "glm-53-flash",
+      "content": "{\"answer\":\"D\"}",
+      "finish_reason": "stop",
+      "json_valid": true,
+      "format_valid": true,
+      "validation_error": null,
+      "seconds": 1.9635789159947308
+    },
+    {
+      "route": "coder",
+      "expected_model": "glm-53-flash",
+      "task_id": "extraction_1",
+      "expected_answer": "D",
+      "request": {
+        "model": "coder",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Ниже приведены заказы. paid означает, что заказ оплачен, cancelled — что он отменён, amount_rub — полная сумма заказа в рублях. Найдите сумму amount_rub только для заказов, у которых paid равно true, а cancelled равно false. Других условий отбора нет; каждый заказ учитывается один раз.\n```json\n[\n  {\"id\": \"O1\", \"paid\": true, \"cancelled\": false, \"amount_rub\": 1200},\n  {\"id\": \"O2\", \"paid\": false, \"cancelled\": false, \"amount_rub\": 900},\n  {\"id\": \"O3\", \"paid\": true, \"cancelled\": true, \"amount_rub\": 500},\n  {\"id\": \"O4\", \"paid\": true, \"cancelled\": false, \"amount_rub\": 750},\n  {\"id\": \"O5\", \"paid\": false, \"cancelled\": true, \"amount_rub\": 400},\n  {\"id\": \"O6\", \"paid\": true, \"cancelled\": false, \"amount_rub\": 1300}\n]\n```\nA) 3750\nB) 4150\nC) 1950\nD) 3250\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": true,
+      "eligible": true,
+      "correct": true,
+      "raw_response": {
+        "id": "80b92e9e7c5845098ce645a2244d8fab",
+        "object": "chat.completion",
+        "created": 1794168821,
+        "model": "glm-53-flash",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"answer\": \"D\"}",
+              "reasoning_content": "1200+750+1300=3250 → D",
+              "tool_calls": null
+            },
+            "logprobs": null,
+            "finish_reason": "stop",
+            "matched_stop": 154827
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 324,
+          "total_tokens": 345,
+          "completion_tokens": 21,
+          "prompt_tokens_details": null,
+          "reasoning_tokens": 14
+        },
+        "metadata": {
+          "weight_version": "default",
+          "weight_versions": [
+            {
+              "version": "default",
+              "start": 0,
+              "end": 21
+            }
+          ]
+        }
+      },
+      "usage": {
+        "prompt_tokens": 324,
+        "total_tokens": 345,
+        "completion_tokens": 21,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 14
+      },
+      "response_model": "glm-53-flash",
+      "content": "{\"answer\": \"D\"}",
+      "finish_reason": "stop",
+      "json_valid": true,
+      "format_valid": true,
+      "validation_error": null,
+      "seconds": 1.072347915993305
+    },
+    {
+      "route": "coder",
+      "expected_model": "glm-53-flash",
+      "task_id": "reading_1",
+      "expected_answer": "A",
+      "request": {
+        "model": "coder",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Используйте только следующий внутренний регламент, без предположений о законодательстве или других правилах. Возврат разрешён тогда и только тогда, когда после покупки прошло от 0 до 14 полных дней включительно (days), товар не использован (unused=true), есть подтверждение покупки (proof=true) и товар не персонализирован (personalized=false). Покупка со скидкой (discounted=true) сама по себе не влияет на право возврата. Все сведения о трёх заявках полны и достоверны:\n```json\n[\n  {\"id\": \"R1\", \"days\": 15, \"unused\": true, \"proof\": true, \"personalized\": false, \"discounted\": false},\n  {\"id\": \"R2\", \"days\": 14, \"unused\": true, \"proof\": true, \"personalized\": false, \"discounted\": true},\n  {\"id\": \"R3\", \"days\": 3, \"unused\": true, \"proof\": true, \"personalized\": true, \"discounted\": false}\n]\n```\nВыберите полный список заявок, для которых возврат разрешён.\nA) R2\nB) R1, R2\nC) R2, R3\nD) R1, R2, R3\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": true,
+      "eligible": true,
+      "correct": true,
+      "raw_response": {
+        "id": "6fb99097d3094b94874bfbf1c34b4c39",
+        "object": "chat.completion",
+        "created": 1794168822,
+        "model": "glm-53-flash",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"answer\": \"A\"}",
+              "reasoning_content": "R2 only.",
+              "tool_calls": null
+            },
+            "logprobs": null,
+            "finish_reason": "stop",
+            "matched_stop": 154827
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 333,
+          "total_tokens": 345,
+          "completion_tokens": 12,
+          "prompt_tokens_details": null,
+          "reasoning_tokens": 5
+        },
+        "metadata": {
+          "weight_version": "default",
+          "weight_versions": [
+            {
+              "version": "default",
+              "start": 0,
+              "end": 12
+            }
+          ]
+        }
+      },
+      "usage": {
+        "prompt_tokens": 333,
+        "total_tokens": 345,
+        "completion_tokens": 12,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 5
+      },
+      "response_model": "glm-53-flash",
+      "content": "{\"answer\": \"A\"}",
+      "finish_reason": "stop",
+      "json_valid": true,
+      "format_valid": true,
+      "validation_error": null,
+      "seconds": 0.9376002920034807
+    },
+    {
+      "route": "coder",
+      "expected_model": "glm-53-flash",
+      "task_id": "python_trace_1",
+      "expected_answer": "B",
+      "request": {
+        "model": "coder",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Каково значение result после выполнения следующего кода на Python 3? Срез списка создаёт поверхностную копию; row[:] создаёт отдельную копию соответствующего вложенного списка.\n```python\na = [[1], [2]]\nb = a\nc = a[:]\nd = [row[:] for row in a]\nb[0].append(3)\nb.append([6])\nc.append([4])\nd[1].append(5)\nresult = [len(a), len(c), len(a[0]), len(d[1]), len(d[0])]\n```\nA) [2, 3, 2, 2, 1]\nB) [3, 3, 2, 2, 1]\nC) [3, 3, 2, 2, 2]\nD) [3, 4, 2, 2, 1]\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": true,
+      "eligible": true,
+      "correct": true,
+      "raw_response": {
+        "id": "0b8a965461094b64a599279a14b1a21a",
+        "object": "chat.completion",
+        "created": 1794168824,
+        "model": "glm-53-flash",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"answer\": \"B\"}",
+              "reasoning_content": "a = [[1],[2]]; b=a; c=a[:] (shallow); d = copies of rows.\nb[0].append(3): a[0]=[1,3]\nb.append([6]): a has 3 elements\nc.append([4]): c has 3 elements\nd[1].append(5): d[1]=[2,5], a[1] unchanged.\nresult: len(a)=3, len(c)=3, len(a[0])=2, len(d[1])=2, len(d[0])=1 → [3,3,2,2,1] → B",
+              "tool_calls": null
+            },
+            "logprobs": null,
+            "finish_reason": "stop",
+            "matched_stop": 154827
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 248,
+          "total_tokens": 388,
+          "completion_tokens": 140,
+          "prompt_tokens_details": null,
+          "reasoning_tokens": 133
+        },
+        "metadata": {
+          "weight_version": "default",
+          "weight_versions": [
+            {
+              "version": "default",
+              "start": 0,
+              "end": 140
+            }
+          ]
+        }
+      },
+      "usage": {
+        "prompt_tokens": 248,
+        "total_tokens": 388,
+        "completion_tokens": 140,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 133
+      },
+      "response_model": "glm-53-flash",
+      "content": "{\"answer\": \"B\"}",
+      "finish_reason": "stop",
+      "json_valid": true,
+      "format_valid": true,
+      "validation_error": null,
+      "seconds": 1.9562998750043334
+    },
+    {
+      "route": "coder",
+      "expected_model": "glm-53-flash",
+      "task_id": "scheduling_1",
+      "expected_answer": "C",
+      "request": {
+        "model": "coder",
+        "temperature": 0,
+        "reasoning_effort": "high",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Есть два одинаковых работника и пять задач. duration — длительность в часах, after — список задач, которые должны полностью завершиться до начала данной задачи. Время начинается с 0; каждая задача выполняется ровно один раз одним работником. Работник выполняет не более одной задачи одновременно. Прерывать, приостанавливать или передавать начатую задачу другому работнику нельзя (без вытеснения). Задачи без зависимостей доступны с момента 0; все данные указаны ниже, других ограничений и затрат времени нет. Начать следующую задачу можно в тот же момент, когда закончилась предыдущая.\n```json\n[\n  {\"id\": \"A\", \"duration\": 3, \"after\": []},\n  {\"id\": \"B\", \"duration\": 5, \"after\": []},\n  {\"id\": \"C\", \"duration\": 4, \"after\": [\"A\"]},\n  {\"id\": \"D\", \"duration\": 4, \"after\": [\"A\"]},\n  {\"id\": \"E\", \"duration\": 2, \"after\": [\"B\", \"C\", \"D\"]}\n]\n```\nЗа какое минимальное число часов от момента 0 можно завершить все задачи?\nA) 9\nB) 10\nC) 11\nD) 13\n\nВерни только JSON-объект с единственным ключом \"answer\" и буквой выбранного варианта \"A\", \"B\", \"C\" или \"D\". Без Markdown, пояснений и текста вне JSON."
+          }
+        ]
+      },
+      "response_received": true,
+      "eligible": true,
+      "correct": true,
+      "raw_response": {
+        "id": "3027f0ee40974182ade40e68606887d3",
+        "object": "chat.completion",
+        "created": 1794168828,
+        "model": "glm-53-flash",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"answer\":\"C\"}",
+              "reasoning_content": "We need answer only JSON. Need solve scheduling. Two identical workers, tasks A3, B5, C4 after A, D4 after A, E2 after B,C,D. Need minimal makespan. Let's analyze. A and B can start at 0 on two workers. A finishes 3, B finishes 5. After A, C and D can run in parallel on two workers from 3 to 7 (if both workers free? Worker doing B busy until 5, worker doing A free at 3. Only one free at 3, other busy until 5. Could start C at 3 on freed worker, D at 5 on other. C finishes 7, D finishes 9. E after B,C,D => max 9, duration2 => 11. Alternative: At 0 A and B. At 3 start D maybe, at 5 start C, finishes 9, E 9-11. Same. Could idle B? Start A at0, maybe B at? Need C,D after A, E after B. Critical maybe A+C/D+E. Since C,D serial due one worker? Total lower bound: A + max(C,D) + E = 3+4+2=9 if C,D parallel. But B length 5 and E after B => at least max(5,9)+2=11. Also resource total 18 hours /2=9. 11 likely. Could there be schedule with B not start at 0? no improves. Answer C. Need final JSON only.",
+              "tool_calls": null
+            },
+            "logprobs": null,
+            "finish_reason": "stop",
+            "matched_stop": 154827
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 342,
+          "total_tokens": 673,
+          "completion_tokens": 331,
+          "prompt_tokens_details": null,
+          "reasoning_tokens": 325
+        },
+        "metadata": {
+          "weight_version": "default",
+          "weight_versions": [
+            {
+              "version": "default",
+              "start": 0,
+              "end": 331
+            }
+          ]
+        }
+      },
+      "usage": {
+        "prompt_tokens": 342,
+        "total_tokens": 673,
+        "completion_tokens": 331,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 325
+      },
+      "response_model": "glm-53-flash",
+      "content": "{\"answer\":\"C\"}",
+      "finish_reason": "stop",
+      "json_valid": true,
+      "format_valid": true,
+      "validation_error": null,
+      "seconds": 4.4199606659967685
+    }
+  ],
+  "method": {
+    "temperature": 0,
+    "parallel_model_queues": 3,
+    "repeats": 1,
+    "client_token_limit": null,
+    "reasoning_setting": "high",
+    "reasoning_support": "unverified",
+    "reasoning_note": "Поддержка запрошенного уровня зависит от модели и конфигурации API. Параметр отправляется буквально, без автоматической замены. Приём поля API и расход reasoning-токенов не доказывают одинаковую интерпретацию запрошенного уровня всеми моделями."
+  },
+  "pricing": {
+    "currency": "USD",
+    "status": "public_price_estimate",
+    "checked_on": "2026-11-08",
+    "formula": "(prompt_tokens * input_per_million + completion_tokens * output_per_million) / 1000000",
+    "assumptions": "Весь вход без кэша; без batch-скидок, налогов и дополнительных сборов. Reasoning повторно не прибавляется к completion_tokens. Это расчётный сценарий по публичным сервисам, не фактическое списание.",
+    "rates": {
+      "llm-small": {
+        "public_model": "qwen3.8-27b",
+        "input_per_million": 0.5,
+        "output_per_million": 3.0,
+        "source": "https://www.qwencloud.com/models/qwen3.8-27b",
+        "note": "Тариф размещённой Qwen 27B используется как ориентир для FP8-версии; точная идентичность конфигураций не подтверждена."
+      },
+      "llm-medium": {
+        "public_model": "DeepSeek-V4-Flash",
+        "input_per_million": 0.22,
+        "output_per_million": 0.66,
+        "source": "https://api-docs.deepseek.com/news/news260813",
+        "price_table": "https://api-docs.deepseek.com/img/v4_260813_price_en.png",
+        "note": "Исторический тариф с 16.08.2026, off-peak, вход без кэша. Сценарный ориентир для checkpoint 0731, не текущая котировка этого checkpoint. В peak тариф вдвое выше: $0.44/$1.32 за 1M токенов."
+      },
+      "coder": {
+        "public_model": "glm-5.3-flash",
+        "input_per_million": 0.15,
+        "output_per_million": 0.5,
+        "source": "https://docs.z.ai/guides/overview/pricing",
+        "note": "Публичный тариф GLM-5.3-Flash используется как ориентир для ID glm-53-flash; соответствие внутреннего ID публичной модели принято как допущение."
+      }
+    }
+  },
+  "limitation": "Стоимость — сценарная оценка по публичным тарифам, не фактическое списание. Qwen: тариф размещённой 27B как ориентир для FP8; DeepSeek: исторический off-peak; GLM: предполагается соответствие ID официальной Flash. GLM Flash не является флагманом; сравнение с флагманом остаётся за рамками прогона.",
+  "summary": [
+    {
+      "route": "llm-small",
+      "expected_model": "Qwen/Qwen3.8-27B-FP8",
+      "label": "Малая · Qwen 27B",
+      "display_name": "Qwen 3.8 27B",
+      "attempts": 10,
+      "task_count": 10,
+      "responses": 0,
+      "api_errors": 10,
+      "excluded": 0,
+      "format_errors": 0,
+      "compared": 0,
+      "correct": 0,
+      "accuracy": 0.0,
+      "mean_seconds": 0.5277335499995388,
+      "median_seconds": 0.5233560630076681,
+      "sum_seconds": 5.277335499995388,
+      "prompt_tokens": null,
+      "completion_tokens": null,
+      "reasoning_tokens": null,
+      "total_tokens": null,
+      "known_total_tokens": 0,
+      "usage_missing": 10,
+      "cost": null,
+      "cost_basis": "public_price_estimate"
+    },
+    {
+      "route": "llm-medium",
+      "expected_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "label": "Средняя · DeepSeek Flash",
+      "display_name": "DeepSeek V4 Flash",
+      "attempts": 10,
+      "task_count": 10,
+      "responses": 10,
+      "api_errors": 0,
+      "excluded": 0,
+      "format_errors": 0,
+      "compared": 10,
+      "correct": 5,
+      "accuracy": 0.5,
+      "mean_seconds": 0.7068746958029806,
+      "median_seconds": 0.688337916508317,
+      "sum_seconds": 7.068746958029806,
+      "prompt_tokens": 2226,
+      "completion_tokens": 70,
+      "reasoning_tokens": 0,
+      "total_tokens": 2296,
+      "known_total_tokens": 2296,
+      "usage_missing": 0,
+      "cost": 0.0005359200000000001,
+      "cost_basis": "public_price_estimate"
+    },
+    {
+      "route": "coder",
+      "expected_model": "glm-53-flash",
+      "label": "Третья · GLM Flash",
+      "display_name": "GLM 5.3 Flash",
+      "attempts": 10,
+      "task_count": 10,
+      "responses": 10,
+      "api_errors": 0,
+      "excluded": 0,
+      "format_errors": 0,
+      "compared": 10,
+      "correct": 10,
+      "accuracy": 1.0,
+      "mean_seconds": 1.9719135538995034,
+      "median_seconds": 1.959939395499532,
+      "sum_seconds": 19.719135538995033,
+      "prompt_tokens": 2173,
+      "completion_tokens": 1191,
+      "reasoning_tokens": 1123,
+      "total_tokens": 3364,
+      "known_total_tokens": 3364,
+      "usage_missing": 0,
+      "cost": 0.0009214500000000001,
+      "cost_basis": "public_price_estimate"
+    }
+  ],
+  "wall_seconds": 19.721919832998537,
+  "finished": "2026-11-08T23:13:48.510637+03:00",
+  "video": "../demo.mp4"
+}
