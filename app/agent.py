@@ -5,74 +5,152 @@ import json
 import time
 
 from .client import ClientError
-from .tools import MAX_PRICE, TOOL_SCHEMAS
+from .tools import TOOL_SCHEMAS
+from .history import HistoryError
+from .response import answer_text, reply_payload
 
 
-SYSTEM_PROMPT = 'Ты помогаешь выбрать квартиру. Данные учебные.'
+SYSTEM_PROMPT = '''Ты — агент подбора путёвки «Компас». Общайся по-русски.
+Данные и цены учебные. Выясни: город вылета, направление (можно любое),
+точные даты с годом и гибкость, ночи, взрослых и возраст детей, общий бюджет,
+формат отдыха, отель и питание. Визовые ограничения уточняй при необходимости.
+Задавай ровно один следующий вопрос за раз. Не спрашивай известное повторно.
+Учитывай несколько ответов в одной реплике и исправления прежних пожеланий.
+Необязательные предпочтения можно пропустить по желанию пользователя.
+Не запрашивай паспортные данные. Не утверждай актуальность виз и цен.
+Когда условия собраны, вызови search_tours; не придумывай предложения, ID и цены.
+При пустой выдаче сообщи об этом и спроси, какое условие можно изменить.
+Не ослабляй условия сам и не подменяй пожелания пользователя учебными примерами.
+Сравнивай найденные варианты по данным результата инструмента.
+Источником фактов о путёвках являются только сообщения role=tool.
+Не добавляй варианты, отели, рейтинги и отзывы, которых нет в результате.
+Если прежний ответ assistant противоречит инструменту, исправь прежний ответ.
+Если пользователь просит вспомнить прошлую выдачу без поиска, используй только
+историю: не вызывай инструмент заново, честно скажи, если сведений нет.
+В новой истории ты не знаешь предыдущие диалоги. Не выдумывай воспоминания.
+На каждом запросе обязательно вызови ровно один инструмент через tool_calls.
+Для вопроса или ответа пользователю вызывай respond_to_user со строгим JSON:
+{"action": "ask|answer", "answer": "текст ответа или один вопрос"}.
+Не добавляй другие поля. action=ask — один уточняющий вопрос, action=answer — ответ.
+Когда условия собраны и пользователь просит поиск — вызывай search_tours,
+а не respond_to_user с обещанием поиска. После результата search_tours вызывай
+respond_to_user с найденными вариантами либо вопросом об изменении условий.
+Для неизвестных необязательных фильтров search_tours передавай null.
+При воспоминании старой выдачи без нового поиска вызывай только respond_to_user.
+В каталоге 606 учебных путёвок: июнь–сентябрь 2027, Москва, Санкт-Петербург,
+Казань, Екатеринбург, Новосибирск; Турция, Египет, Россия, Таиланд, ОАЭ,
+Шри-Ланка. Не ограничивай пользователя контрольными двумя датами.'''
 
 
 class AgentError(RuntimeError):
     pass
 
 
-def matching_apartment(events, goal):
-    """Условие выполнено данными функций, а не обещанием в тексте модели."""
-    found = {}
-    approved = set()
-    for event in events:
-        result = event['result']
-        if 'error' in result:
-            continue
-        apartment = result.get('apartment')
-        if event['name'] == 'choose_apartment' and apartment and apartment['price'] <= MAX_PRICE:
-            found[apartment['id']] = apartment
-        elif event['name'] == 'check_mortgage' and result.get('affordable'):
-            selected = found.get(result['apartment_id'])
-            if selected and selected['price'] == result['price'] <= result['limit']:
-                approved.add(result['apartment_id'])
-    for apartment in reversed(list(found.values())):
-        if goal == 'price' or (goal == 'mortgage' and apartment['id'] in approved):
-            return apartment
-    return None
+LEGACY_OPENING_QUESTION = 'Из какого города планируете вылетать?'
+OPENING_QUESTION = ('Откуда летим?\n1. Москва\n2. Санкт-Петербург\n3. Казань\n'
+                    '4. Екатеринбург\n5. Новосибирск\nМожно номер или свой город.')
+
+
+def opening_messages(question=OPENING_QUESTION):
+    """Локальный стартовый вопрос, не выдаваемый за ответ API."""
+    return [
+        {'role': 'assistant', 'content': None, 'tool_calls': [
+            {'id': 'local-opening-question', 'type': 'function', 'function': {
+                'name': 'respond_to_user',
+                'arguments': json.dumps({'action': 'ask', 'answer': question}, ensure_ascii=False)}}]},
+        {'role': 'tool', 'tool_call_id': 'local-opening-question',
+         'content': '{"status":"accepted"}'},
+    ]
 
 
 class Agent:
-    def __init__(self, client, tools, max_steps=None, on_event=None, on_progress=None):
+    def __init__(self, client, tools, max_steps=5, on_event=None, on_progress=None, history=None):
         self.client = client
         self.tools = tools
-        self.max_steps = max_steps if max_steps is not None else 2 * len(tools.catalog) + 5
+        if type(max_steps) is not int or not 1 <= max_steps <= 5:
+            raise ValueError('Лимит обращений к LLM должен быть от 1 до 5.')
+        self.max_steps = max_steps
         self.on_event = on_event
         self.on_progress = on_progress
-        self.messages = [{'role': 'system', 'content': SYSTEM_PROMPT}]
+        self.history = history
+        loaded = history.load() if history else None
+        self.restored = loaded is not None
+        self.messages = loaded if loaded is not None else [{'role': 'system', 'content': SYSTEM_PROMPT}]
         self.events = []
         self.trace = []
-        self.goal = None
 
-    def ask(self, text, goal=None):
+    def start_dialog(self):
+        if len(self.messages) != 1:
+            return False
+        messages = self.messages + opening_messages()
+        if self.history:
+            self.history.save(messages)
+        self.messages = messages
+        return True
+
+    def ask(self, text):
         if not isinstance(text, str) or not text.strip():
             raise AgentError('Введите непустой запрос.')
-        if goal not in (None, 'price', 'mortgage'):
-            raise AgentError('Неизвестное условие завершения подбора.')
-        self.goal = goal
+        try:
+            text.encode('utf-8')
+        except UnicodeError:
+            raise AgentError('Ввод содержит повреждённый символ: сообщение не отправлено и не сохранено. '
+                             'Введите его заново (например, Санкт-Петербург).') from None
+        if '\ufffd' in text:
+            raise AgentError('Во вводе найден символ замены �. Сообщение не отправлено и не сохранено. '
+                             'Введите текст заново.')
         self.events = []
         self.trace = []
         start = len(self.messages)
-        tool_state = (self.tools.seen.copy(), self.tools.bank_limit, self.tools.rng.getstate())
         self.messages.append({'role': 'user', 'content': text})
         try:
-            return self._run()
-        except (AgentError, ClientError):
+            answer = self._run()
+            if self.history:
+                self.history.save(self.messages)
+            return answer
+        except (AgentError, ClientError, HistoryError, KeyboardInterrupt):
             # Не оставляем незавершённый tool-протокол в следующем HTTP-запросе.
             del self.messages[start:]
-            self.tools.seen, self.tools.bank_limit, rng_state = tool_state
-            self.tools.rng.setstate(rng_state)
             raise
 
     def _run(self):
-        stagnant = 0
-        checked = set()
+        accepted = {m['tool_call_id'] for m in self.messages if m['role'] == 'tool'
+                    and json.loads(m['content']).get('status') == 'accepted'}
+        questions = sum(1 for m in self.messages if m['role'] == 'assistant'
+                        for call in m.get('tool_calls', [])
+                        if call['id'] in accepted and call['function']['name'] == 'respond_to_user'
+                        and self._is_question(call['function']['arguments']))
+        had_search = any(m['role'] == 'tool' and 'tours' in json.loads(m['content'])
+                         for m in self.messages)
         for step in range(1, self.max_steps + 1):
-            request = {'messages': deepcopy(self.messages), 'tools': deepcopy(TOOL_SCHEMAS)}
+            must_search = questions >= 5 and not had_search
+            control = (
+                f'Управление опросом: уже задано {questions} вопросов из максимум 5 за весь подбор. '
+                'Первый — город вылета. Остальные объединяй: 2) направление и формат отдыха; '
+                '3) даты с годом, гибкость и ночи; 4) взрослые, дети и возраст; '
+                '5) общий бюджет, отель и питание. Пропускай уже известные сведения. '
+                'Когда ответ на пятый вопрос получен, сразу search_tours; неизвестные поля null. '
+                'После лимита никаких уточняющих вопросов: action=answer, без вопроса в тексте. '
+                'Неизвестные условия и состав найденных групп честно укажи, не выдумывай их. '
+                'Если выдача пуста — сообщи это, не ослабляй заданные условия.'
+                '\nСтиль вопросов: короткий заголовок и 3–5 пронумерованных вариантов, '
+                'каждый с новой строки. Без вступлений, повторения известных условий и длинных объяснений. '
+                'В конце: «Можно номер или свой вариант». Цифра пользователя относится ТОЛЬКО '
+                'к вариантам последнего показанного вопроса. Не путай её с бюджетом или количеством людей. '
+                'Для объединённых параметров предлагай готовые понятные наборы, '
+                'каждый выбранный набор явно содержит все свои условия. '
+                'Примеры: направление — «Турция, пляжный», «Египет, пляжный», «Россия, экскурсии»; '
+                'даты — «10 июня 2027, 7 ночей, строго», «12 июня 2027, 7 ночей, строго», '
+                '«Свои даты и ночи»; состав — «1 взрослый», «2 взрослых, без детей», '
+                '«2 взрослых + ребёнок (напишите возраст)», «Свой состав»; '
+                'бюджет и отель — «до150000 ₽, 3★+, завтраки», '
+                '«до200000 ₽, 4★+, всё включено», «до300000 ₽, 5★, всё включено», '
+                '«Свой бюджет и отель». Это примеры пожеланий, не гарантия наличия тура. '
+                'Не уточняй отдельно необязательные детали, если их можно оставить null.'
+            )
+            request = {'messages': deepcopy(self.messages) + [{'role': 'system', 'content': control}],
+                       'tools': deepcopy(TOOL_SCHEMAS[:1] if must_search else TOOL_SCHEMAS),
+                       'tool_choice': 'required'}
             started = time.perf_counter()
             if self.on_progress:
                 self.on_progress({'kind': 'request', 'step': step})
@@ -91,54 +169,33 @@ class Agent:
                                   'seconds': self.trace[-1]['seconds']})
             message, tool_calls = self._parse(response)
             self.messages.append(message)
-            if not tool_calls:
-                feedback = self._completion_feedback()
-                if feedback:
-                    stagnant += 1
-                    if stagnant >= 3:
-                        raise AgentError('Модель не продвигается в подборе: три ответа без результата. '
-                                         'Подходящая квартира не подтверждена.')
-                    self.messages.append({'role': 'user', 'content': feedback})
-                    if self.on_progress:
-                        self.on_progress({'kind': 'continue', 'step': step, 'message': feedback})
-                    continue
-                return message['content']
-            before = (len(self.tools.seen), self.tools.bank_limit, len(checked))
             for call in tool_calls:
                 function = call['function']
-                result = self.tools.execute(function['name'], function['arguments'])
+                if must_search and function['name'] != 'search_tours':
+                    result = {'error': 'Лимит вопросов исчерпан. Выполни search_tours, неизвестные поля null.'}
+                elif questions >= 5 and function['name'] == 'respond_to_user' and self._is_question(function['arguments']):
+                    result = {'error': 'Шестой уточняющий вопрос запрещён. Верни action=answer с результатом поиска.'}
+                else:
+                    result = self.tools.execute(function['name'], function['arguments'])
+                if function['name'] == 'search_tours' and 'tours' in result:
+                    had_search = True
                 event = {'step': step, 'call_id': call['id'], 'name': function['name'],
                          'arguments': function['arguments'], 'result': deepcopy(result)}
                 self.events.append(event)
-                if function['name'] == 'check_mortgage' and 'error' not in result:
-                    checked.add(result['apartment_id'])
                 self.messages.append({'role': 'tool', 'tool_call_id': call['id'],
                                       'content': json.dumps(result, ensure_ascii=False)})
                 if self.on_event:
                     self.on_event(event)
-            after = (len(self.tools.seen), self.tools.bank_limit, len(checked))
-            stagnant = stagnant + 1 if before == after else 0
-            if stagnant >= 3:
-                raise AgentError('Три шага без новых результатов: подбор остановлен, условие не подтверждено.')
+                if function['name'] == 'respond_to_user' and 'error' not in result:
+                    return answer_text(function['arguments'])
         raise AgentError(f'Достигнут лимит {self.max_steps} шагов. Попробуйте уточнить запрос или /new.')
 
-    def _completion_feedback(self):
-        if self.goal is None or matching_apartment(self.events, self.goal):
-            return None
-        budget = self.tools.bank_limit if self.goal == 'mortgage' else None
-        limit = MAX_PRICE if budget is None else min(MAX_PRICE, budget)
-        found_ids = {e['result']['apartment']['id'] for e in self.events
-                     if e['name'] == 'choose_apartment' and e['result'].get('apartment')}
-        if not any(a['price'] <= limit and (a['id'] not in self.tools.seen or a['id'] in found_ids)
-                   for a in self.tools.catalog):
-            raise AgentError('Подходящих квартир больше нет: доступные варианты каталога исчерпаны.')
-        if self.goal == 'price':
-            return ('Подбор не завершён: ещё не найдена квартира, прошедшая проверку допустимой цены. '
-                    'Нужен подходящий вариант.')
-        note = f' Лимит банка — {budget:,} ₽.'.replace(',', ' ') if budget is not None else ''
-        return ('Подбор не завершён: ещё нет найденной квартиры, прошедшей проверку цены, '
-                'для которой подтверждено полное финансирование банка.' + note +
-                ' Нужен подходящий вариант, а не только сообщение об отказе.')
+    @staticmethod
+    def _is_question(arguments):
+        try:
+            return reply_payload(arguments)['action'] == 'ask'
+        except ValueError:
+            return False
 
     @staticmethod
     def _parse(response):
@@ -148,9 +205,11 @@ class Agent:
             reason = choice.get('finish_reason')
             if reason in ('length', 'content_filter'):
                 raise AgentError('Ответ модели обрезан или заблокирован; финал не получен.')
-            calls = raw.get('tool_calls') or []
+            calls = raw.get('tool_calls', [])
+            if calls is None:
+                calls = []
             content = raw.get('content')
-            if not isinstance(calls, list):
+            if not isinstance(calls, list) or len(calls) != 1:
                 raise ValueError
             if calls:
                 ids = set()
@@ -161,12 +220,11 @@ class Agent:
                             or not isinstance(call['function']['arguments'], str)):
                         raise ValueError
                     ids.add(call['id'])
-                message = {'role': 'assistant', 'content': content if isinstance(content, str) else None,
-                           'tool_calls': calls}
-            else:
-                if reason != 'stop' or not isinstance(content, str) or not content.strip():
+                if content is not None and not isinstance(content, str):
                     raise ValueError
-                message = {'role': 'assistant', 'content': content}
+            message = deepcopy(raw)
+            message['role'] = 'assistant'
             return message, calls
         except (KeyError, IndexError, TypeError, ValueError, AttributeError):
-            raise AgentError('Некорректный или пустой ответ API: нет финала или корректных tool_calls.') from None
+            raise AgentError('Некорректный ответ API: обязателен ровно один tool_call '
+                             '(search_tours или respond_to_user). Ход не сохранён.') from None

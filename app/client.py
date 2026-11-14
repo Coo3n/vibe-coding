@@ -9,6 +9,8 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
+from .response import RESPONSE_FORMAT
+
 
 class ClientError(RuntimeError):
     pass
@@ -78,11 +80,12 @@ class ChatClient:
             return KNOWN_MODELS.get(identifier)
         return identifier
 
-    def complete(self, messages, tools=None):
+    def complete(self, messages, tools=None, tool_choice='required'):
+        if not tools or tool_choice != 'required':
+            raise ClientError('Агент требует tools и tool_choice=required на каждом запросе.')
         payload = {'model': self.settings['LLM_MODEL'], 'messages': messages,
-                   'temperature': 0}
-        if tools:
-            payload.update(tools=tools, tool_choice='auto', parallel_tool_calls=False)
+                   'temperature': 0, 'response_format': RESPONSE_FORMAT}
+        payload.update(tools=tools, tool_choice='required', parallel_tool_calls=False)
         data = self._request(self.settings['LLM_API_URL'], payload)
         if isinstance(data, dict):
             identifier = data.get('model')
@@ -91,17 +94,22 @@ class ChatClient:
         return data
 
     def _request(self, url, payload=None, timeout=None):
-        request = Request(url,
-                          data=None if payload is None else json.dumps(payload, ensure_ascii=False).encode('utf-8'),
-                          headers={'Authorization': 'Bearer ' + self.settings['LLM_API_KEY'],
-                                   'Content-Type': 'application/json'})
+        try:
+            body = None if payload is None else json.dumps(payload, ensure_ascii=False).encode('utf-8')
+            request = Request(url, data=body,
+                              headers={'Authorization': 'Bearer ' + self.settings['LLM_API_KEY'],
+                                       'Content-Type': 'application/json'})
+        except (ValueError, TypeError, UnicodeError):
+            raise ClientError('Не удалось подготовить запрос API: повреждённый текст или настройки. '
+                              'Запрос не отправлен.') from None
         try:
             with self.opener.open(request, timeout=self.timeout if timeout is None else timeout) as response:
                 return json.loads(response.read().decode('utf-8'))
         except HTTPError as error:
             status = error.code
             error.close()
-            raise ClientError(f'API вернул HTTP {status}. Проверьте доступ и модель.') from None
+            raise ClientError(f'API вернул HTTP {status}. Проверьте доступ и поддержку '
+                              'моделью tools и response_format=json_schema (strict).') from None
         except URLError as error:
             if isinstance(error.reason, socket.gaierror):
                 raise ClientError('Адрес API не найден в DNS. Проверьте LLM_API_URL и доступ к корпоративной сети/VPN.') from None

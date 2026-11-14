@@ -5,3 +5,5 @@ __pycache__/
 *.py[cod]
 .superpowers/
 results/local-*/
+data/session.json
+data/.session-*.tmp

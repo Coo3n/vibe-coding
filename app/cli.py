@@ -1,8 +1,8 @@
-"""Цветной чат и четыре демонстрационных сюжета."""
+"""Консоль task-6: диалог, инструменты и наглядное восстановление контекста."""
 
 import argparse
 from contextlib import contextmanager
-from datetime import datetime
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -15,19 +15,15 @@ from rich.panel import Panel
 from rich.progress import Progress, ProgressColumn, SpinnerColumn, TextColumn
 from rich.text import Text
 
-from .agent import Agent, AgentError, matching_apartment
+from .agent import Agent, AgentError, SYSTEM_PROMPT, OPENING_QUESTION
 from .client import ChatClient, ClientError, load_settings
-from .tools import HousingTools
+from .history import HistoryStore, HistoryError
+from .tools import TravelTools
+from .response import answer_text
 
 
 ROOT = Path(__file__).resolve().parent.parent
 COLORS = {'user': '#92b7ff', 'answer': '#76ddbd', 'tool': '#e7ba76', 'error': '#ff8a96'}
-CASES = [
-    ('Без инструментов', 'Что такое первоначальный взнос по ипотеке?'),
-    ('Поиск до подходящей цены', 'Найди случайную квартиру в Санкт-Петербурге.'),
-    ('Поиск до одобрения банка', 'Найди квартиру в Санкт-Петербурге, которую полностью оплатит банк.'),
-]
-GOALS = (None, 'price', 'mortgage')
 
 
 class WaitColumn(ProgressColumn):
@@ -58,41 +54,92 @@ class Terminal:
                                  box=box.ROUNDED, padding=(0, 2), border_style=COLORS[kind],
                                  style='#e7edf6 on #121c2b'))
 
-    def event(self, event):
+    def event(self, event, historical=False):
         result = event['result']
+        source = 'ИЗ ИСТОРИИ — не новый вызов' if historical else f"Модель вызвала {event['name']}"
+        parameters = format_parameters(event['arguments'])
         if 'error' in result:
-            self.panel('ОШИБКА ИНСТРУМЕНТА', f"{event['name']}: {result['error']}", 'error')
+            self.panel('ОШИБКА ИНСТРУМЕНТА', source, 'error',
+                       sections=[('ПАРАМЕТРЫ', parameters), ('РЕЗУЛЬТАТ', str(result['error']))])
             return
-        if event['name'] == 'choose_apartment':
-            limit = json.loads(event['arguments']).get('max_price')
-            condition = f'Цена до {money(limit)}' if limit is not None else 'Без ограничения цены'
-            apartment = result.get('apartment')
-            if result.get('status') == 'price_above_limit':
-                rejected = result['rejected_apartment']
-                details = (f"Квартира {rejected['id']} отсеяна по цене\n"
-                           f"Цена: {money(rejected['price'])}\n"
-                           f"Допустимый максимум: {money(result['price_limit'])}\n"
-                           'Для этой квартиры проверка банка не выполняется.')
-            elif apartment:
-                rooms = 'студия' if apartment['rooms'] == 0 else str(apartment['rooms'])
-                details = (f"Найдена квартира {apartment['id']}\n"
-                           f"Район: {apartment['district']}\n"
-                           f"Комнат: {rooms} · Площадь: {apartment['area_m2']:g} м²\n"
-                           f"Цена: {money(apartment['price'])}")
-            else:
-                details = 'Новых квартир под эти условия не осталось.'
-            self.panel('ИНСТРУМЕНТ · ПОИСК КВАРТИРЫ',
-                       'Модель вызвала choose_apartment', 'tool',
-                       sections=[('ПАРАМЕТРЫ', condition), ('РЕЗУЛЬТАТ', details)])
-        elif event['name'] == 'check_mortgage':
-            decision = 'Денег хватает на всю стоимость квартиры' if result['affordable'] else 'Денег не хватает'
-            text = (f"Банк: {result['bank']}\nЛимит: {money(result['limit'])}\n"
-                    f"Решение: {decision}")
-            if not result['affordable']:
-                text += f"\nНедостаёт: {money(result['shortfall'])}"
-            self.panel('ИНСТРУМЕНТ · ПРОВЕРКА БАНКА', 'Модель вызвала check_mortgage', 'tool',
-                       sections=[('КВАРТИРА', f"{result['apartment_id']} · {money(result['price'])}"),
-                                 ('РЕШЕНИЕ БАНКА', text)])
+        if event['name'] == 'respond_to_user':
+            return  # Ответ показывается после успешного сохранения хода, а не как выдача поиска.
+        tours = result.get('tours')
+        if isinstance(tours, list) and all(isinstance(t, dict) for t in tours):
+            details = '\n\n'.join(format_tour(t) for t in tours) if tours else 'По заданным условиям путёвок нет.'
+            details += '\n\nДанные и цены учебные, не предложение к покупке.'
+        else:
+            details = json.dumps(result, ensure_ascii=False, indent=2)
+        self.panel('ИНСТРУМЕНТ · ПОИСК ПУТЁВОК', source, 'tool',
+                   sections=[('ПАРАМЕТРЫ', parameters),
+                             ('РЕЗУЛЬТАТ', details)])
+
+    def context(self, agent, restored=False):
+        fingerprint = hashlib.sha256(json.dumps(agent.messages, ensure_ascii=False, sort_keys=True,
+                                                separators=(',', ':')).encode('utf-8')).hexdigest()[:12]
+        calls = sum(len(m.get('tool_calls') or []) for m in agent.messages)
+        users = sum(m['role'] == 'user' for m in agent.messages)
+        accepted = {m['tool_call_id'] for m in agent.messages if m['role'] == 'tool'
+                    and json.loads(m['content']).get('status') == 'accepted'}
+        answers = sum(call['id'] in accepted and call['function']['name'] == 'respond_to_user'
+                      for m in agent.messages for call in m.get('tool_calls', []))
+        systems = sum(m['role'] == 'system' for m in agent.messages)
+        assistants = sum(m['role'] == 'assistant' for m in agent.messages)
+        results = sum(m['role'] == 'tool' for m in agent.messages)
+        self.panel('КОНТЕКСТ',
+                   f"{'Восстановлено' if restored else 'Сохранено'}: {users + answers} реплик диалога "
+                   f'(ваших: {users}, агента: {answers})\n'
+                   f'В JSON: {len(agent.messages)} технических записей — '
+                   f'system: {systems}, user: {users}, assistant: {assistants}, tool: {results}\n'
+                   f'Вызовов инструментов в истории: {calls}\n'
+                   f'Отпечаток истории: {fingerprint}\nФайл: {agent.history.path}', 'answer')
+        self.console.print(Text('  /history — все записи: системная инструкция, сообщения, вызовы и результаты',
+                                style='dim'))
+
+    def history(self, messages):
+        labels = {'system': 'СИСТЕМНАЯ ИНСТРУКЦИЯ', 'user': 'ВАШЕ СООБЩЕНИЕ',
+                  'assistant': 'СООБЩЕНИЕ МОДЕЛИ / ВЫЗОВ ИНСТРУМЕНТА', 'tool': 'РЕЗУЛЬТАТ ИНСТРУМЕНТА'}
+        self.panel('ПОЛНАЯ ИСТОРИЯ JSON',
+                   f'{len(messages)} сохранённых записей. Показ без изменений и без запросов к API.\n'
+                   'assistant с tool_calls — вызов; tool со status=accepted — подтверждение ответа.', 'answer')
+        for index, message in enumerate(messages, 1):
+            role = message['role']
+            kind = 'tool' if role == 'tool' else 'user' if role == 'user' else 'answer'
+            self.panel(f"#{index} · {role} · {labels.get(role, role)}",
+                       json.dumps(message, ensure_ascii=False, indent=2), kind)
+
+    def replay(self, messages, last_turns=5):
+        starts = [index for index, message in enumerate(messages) if message['role'] == 'user']
+        if not starts:
+            for message in messages:
+                if message['role'] == 'assistant':
+                    for call in message.get('tool_calls') or []:
+                        if call['id'] == 'local-opening-question':
+                            self.panel('ВОПРОС · ИЗ ИСТОРИИ',
+                                       answer_text(call['function']['arguments']), 'answer')
+            return
+        start = starts[-last_turns] if len(starts) > last_turns else 1
+        self.panel('ПОСЛЕДНИЕ СООБЩЕНИЯ',
+                   f'Показаны последние {min(len(starts), last_turns)} ходов диалога.\n'
+                   'Вся история загружена; ограничен только показ в консоли.', 'answer')
+        calls = {}
+        for message in messages[start:]:
+            role = message['role']
+            if role == 'user':
+                self.panel('ВЫ · ИЗ ИСТОРИИ', message['content'])
+            elif role == 'assistant':
+                # Сопутствующий content остаётся в JSON, но не является принятым ответом.
+                for call in message.get('tool_calls') or []:
+                    calls[call['id']] = call['function']
+            elif role == 'tool':
+                function = calls[message['tool_call_id']]
+                result = json.loads(message['content'])
+                if function['name'] == 'respond_to_user' and result.get('status') == 'accepted':
+                    self.panel('ОТВЕТ · ИЗ ИСТОРИИ', answer_text(function['arguments']),
+                               'answer', markdown=True)
+                else:
+                    self.event({'name': function['name'], 'arguments': function['arguments'],
+                                'result': result}, historical=True)
 
     @contextmanager
     def pause_input(self):
@@ -110,7 +157,7 @@ class Terminal:
         finally:
             termios.tcsetattr(fd, termios.TCSAFLUSH, original)
 
-    def ask(self, agent, prompt, show_prompt=True, goal=None):
+    def ask(self, agent, prompt, show_prompt=True):
         if show_prompt:
             self.panel('ВЫ', prompt)
         with self.pause_input():
@@ -125,8 +172,7 @@ class Terminal:
                 def network_event(event):
                     step = event['step']
                     if event['kind'] == 'request':
-                        context = ('ваше сообщение' if step == 1 else
-                                   'результаты и текущее состояние подбора')
+                        context = f'всю историю: {len(agent.messages)} сообщений'
                         self.console.print(Text(f'  → LLM: запрос №{step} · передаю {context}',
                                                 style='#92b7ff'))
                         progress.reset(task_id, description=f'Запрос №{step} · ждём ответ LLM')
@@ -136,7 +182,7 @@ class Terminal:
                             self.console.print(Text(f"  ← LLM: ответ на запрос №{step} · {event['seconds']:.2f} с",
                                                     style='#76ddbd'))
                         elif event['kind'] == 'continue':
-                            self.console.print(Text('  Агент продолжает поиск: ' + event['message'],
+                            self.console.print(Text('  Агент уточняет ответ: ' + event['message'],
                                                     style='#e7ba76'))
                         progress.update(task_id, description='Обработка ответа')
                     if previous:
@@ -144,104 +190,104 @@ class Terminal:
 
                 agent.on_progress = network_event
                 try:
-                    answer = agent.ask(prompt, goal=goal)
+                    answer = agent.ask(prompt)
                 finally:
                     agent.on_progress = previous
             seconds = sum(row['seconds'] for row in agent.trace)
             summary = [f'Запросов к модели: {len(agent.trace)} · {seconds:.2f} с']
             if agent.events:
                 summary.append(f'Вызванные инструменты ({len(agent.events)}):')
-                names = {'choose_apartment': 'Поиск квартиры', 'check_mortgage': 'Проверка банка'}
+                names = {'search_tours': 'Поиск путёвок', 'respond_to_user': 'Ответ пользователю (JSON)'}
                 for number, event in enumerate(agent.events, 1):
                     name = event['name']
                     status = ' · ошибка' if 'error' in event['result'] else ''
-                    if event['result'].get('status') == 'price_above_limit':
-                        status = ' · квартира отсеяна: дороже 15 млн ₽'
                     summary.append(f"{number}. {names.get(name, name)} ({name}) "
                                    f"— после ответа модели №{event['step']}{status}")
+                if not any(event['name'] == 'search_tours' for event in agent.events):
+                    summary.append('Поиск путёвок не вызывался.')
             else:
                 summary.append('Инструменты не вызывались — модель ответила сама.')
             self.panel(f'ОТВЕТ · {agent.client.model_name}', answer, 'answer', markdown=True,
                        sections=[('ВЫЗОВЫ ЗА ЭТОТ ЗАПРОС', '\n'.join(summary))])
+            self.context(agent)
             self.console.print()
         return answer
 
 
 def money(value):
-    return f'{value:,} ₽'.replace(',', ' ')
+    return f'{value:,} ₽'.replace(',', ' ') if type(value) is int else str(value)
 
 
-def evaluate(index, events, answer):
-    if not answer:
-        return False
-    names = [e['name'] for e in events]
-    if index == 0:
-        return not events
-    if index == 1:
-        return (set(names) == {'choose_apartment'}
-                and matching_apartment(events, 'price') is not None)
-    bank_limits = {e['result']['limit'] for e in events
-                   if e['name'] == 'check_mortgage' and 'error' not in e['result']}
-    return len(bank_limits) == 1 and matching_apartment(events, 'mortgage') is not None
+def format_parameters(arguments):
+    labels = {'departure_city': 'Вылет из', 'departure_date': 'Дата вылета',
+              'flex_days': 'Гибкость, ± дней', 'nights_min': 'Ночей от', 'nights_max': 'Ночей до',
+              'adults': 'Взрослых', 'children_ages': 'Возраст детей', 'budget_total': 'Бюджет на всех',
+              'country': 'Страна', 'resort': 'Курорт', 'stars_min': 'Звёзд от',
+              'meal': 'Питание', 'features': 'Пожелания'}
+    try:
+        args = json.loads(arguments)
+        if not isinstance(args, dict):
+            return arguments
+        lines = []
+        for key, value in args.items():
+            if value is None:
+                value = 'не задано'
+            elif key == 'budget_total':
+                value = money(value)
+            elif isinstance(value, list):
+                value = ', '.join(map(str, value)) or 'нет'
+            lines.append(f'{labels.get(key, key)}: {value}')
+        return '\n'.join(lines)
+    except ValueError:
+        return arguments
 
 
-def run_demo(client, terminal, catalog, directory, case_number=None):
-    directory.mkdir(parents=True, exist_ok=False)
-    report = {'started': datetime.now().astimezone().isoformat(),
-               'route': client.settings['LLM_MODEL'],
-               'note': 'Реальный API; выбор квартиры и лимит банка случайны, seed не фиксируется.',
-               'cases': []}
-    indices = [case_number - 1] if case_number else range(3)
-    for index in indices:
-        title, prompt = CASES[index]
-        terminal.panel(f'КЛЮЧ · ДЕНЬ 6 · СЮЖЕТ {index + 1}',
-                       f'{title} · {client.model_name}\n'
-                       '300 учебных квартир в СПб · вымышленный банк «Нева»',
-                       sections=[('ВАШ ЗАПРОС', prompt)])
-        agent = Agent(client, HousingTools(catalog), on_event=terminal.event)
-        answer, error = '', None
-        try:
-            answer = terminal.ask(agent, prompt, show_prompt=False, goal=GOALS[index])
-        except (AgentError, ClientError) as caught:
-            error = str(caught)
-            terminal.panel('ОШИБКА', error, 'error')
-        passed = not error and evaluate(index, agent.events, answer)
-        report['cases'].append({'title': title, 'prompt': prompt, 'answer': answer, 'error': error,
-                                'model': client.actual_model,
-                                'goal': GOALS[index],
-                                'matched_apartment': matching_apartment(agent.events, GOALS[index]),
-                                'passed': passed, 'events': agent.events, 'trace': agent.trace})
-        report['passed'] = len(report['cases']) == len(indices) and all(r['passed'] for r in report['cases'])
-        (directory / 'demo.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n',
-                                            encoding='utf-8')
-    return report['passed']
+def format_tour(tour):
+    meals = {'AI': 'всё включено', 'HB': 'завтрак и ужин', 'BB': 'завтрак'}
+    text = (f"{tour.get('id')} · {tour.get('hotel')}\n"
+            f"{tour.get('country')} · {tour.get('resort')}\n"
+            f"Вылет: {tour.get('departure_city')} · {tour.get('departure_date')} · {tour.get('nights')} ночей\n"
+            f"Взрослых: {tour.get('adults')} · Детей: {tour.get('children')}\n"
+            f"Отель: {tour.get('stars')}★ · {meals.get(tour.get('meal'), tour.get('meal'))}\n"
+            f"Цена на всех: {money(tour.get('price_total'))}\n"
+            f"Особенности: {', '.join(map(str, tour.get('features', [])))}")
+    if tour.get('children'):
+        text += f"\nВозраст детей: {tour.get('child_age_min')}–{tour.get('child_age_max')} лет"
+    return text
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Ключ · квартирный агент с LLM tool calling')
+    parser = argparse.ArgumentParser(description='Компас · путёвки с сохранением контекста')
     parser.add_argument('--env', type=Path, default=ROOT / '.env', help='Файл настроек API')
     parser.add_argument('--model', help='Модель, иначе LLM_MODEL или coder')
-    parser.add_argument('--demo', action='store_true', help='Три обязательных сюжета ТЗ через API')
-    parser.add_argument('--case', type=int, choices=(1, 2, 3), help='Один из трёх сюжетов ТЗ')
-    parser.add_argument('--output-dir', type=Path, help='Новая папка для отчёта --demo')
     args = parser.parse_args()
-    if args.output_dir and not (args.demo or args.case):
-        parser.error('--output-dir используется вместе с --demo или --case')
     terminal = Terminal()
     try:
         settings = load_settings(args.env)
         if args.model:
             settings['LLM_MODEL'] = args.model
-        catalog = json.loads((ROOT / 'data' / 'apartments.json').read_text(encoding='utf-8'))
+        catalog = json.loads((ROOT / 'data' / 'tours.json').read_text(encoding='utf-8'))
+        store = HistoryStore(ROOT / 'data' / 'session.json')
         client = ChatClient(settings)
+        agent = Agent(client, TravelTools(catalog), on_event=terminal.event, history=store)
+        terminal.panel('К О М П А С  /  ДЕНЬ 7',
+                       'Подбор путёвки · полная история между запусками\n'
+                       'Данные и цены вымышленные. Работайте только в одном экземпляре.\n'
+                       f'{len(catalog)} учебных путёвок · июнь–сентябрь 2027 · 5 городов вылета.\n\n'
+                       '/new — новый подбор   /history — вся история   /exit — выход', 'answer')
+        if agent.start_dialog():
+            terminal.panel('НОВЫЙ ДИАЛОГ', 'Начинаем подбор путёвки.')
+            terminal.panel('ВОПРОС · ЛОКАЛЬНЫЙ СТАРТ', OPENING_QUESTION, 'answer')
+            terminal.context(agent)
+        elif agent.restored:
+            terminal.context(agent, restored=True)
+            terminal.replay(agent.messages)
+        else:
+            store.save(agent.messages)
+            terminal.panel('НОВЫЙ ДИАЛОГ', 'Предыдущей истории нет. Расскажите, какой отдых хотите.')
+            terminal.context(agent)
+        # Каталог моделей не нужен для восстановления и не выполняет генерацию.
         client.load_model_catalog()
-        if args.demo or args.case:
-            directory = args.output_dir or ROOT / 'results' / ('local-' + datetime.now().strftime('%Y%m%d-%H%M%S-%f'))
-            return 0 if run_demo(client, terminal, catalog, directory, args.case) else 1
-        terminal.panel('К Л Ю Ч  /  ДЕНЬ 6',
-                       f'300 квартир в Петербурге · банк «Нева» · {client.model_name}\n'
-                       'Данные и банк вымышленные.\n\n/new — новый подбор   /exit — выход', 'answer')
-        agent = Agent(client, HousingTools(catalog), on_event=terminal.event)
         while True:
             try:
                 text = terminal.console.input('[bold #92b7ff]  Вы › [/]').strip()
@@ -249,17 +295,29 @@ def main():
                 break
             if text.lower() in ('/exit', '/quit'):
                 break
+            if text.lower() == '/history':
+                terminal.history(agent.messages)
+                continue
             if text.lower() == '/new':
-                agent = Agent(client, HousingTools(catalog), on_event=terminal.event)
-                terminal.panel('НОВЫЙ ПОДБОР', 'История очищена. Банк определит новый лимит при проверке.')
+                try:
+                    store.save([{'role': 'system', 'content': SYSTEM_PROMPT}])
+                    agent = Agent(client, TravelTools(catalog), on_event=terminal.event, history=store)
+                    agent.start_dialog()
+                    terminal.panel('НОВЫЙ ПОДБОР', 'История очищена и сохранена. Начинаем заново.')
+                    terminal.panel('ВОПРОС · ЛОКАЛЬНЫЙ СТАРТ', OPENING_QUESTION, 'answer')
+                    terminal.context(agent)
+                except HistoryError as error:
+                    terminal.panel('ОШИБКА', str(error), 'error')
             elif text:
                 try:
                     terminal.ask(agent, text)
-                except (AgentError, ClientError) as error:
+                except (AgentError, ClientError, HistoryError) as error:
                     terminal.panel('ОШИБКА', str(error), 'error')
+                    terminal.panel('КОНТЕКСТ · ХОД НЕ СОХРАНЁН',
+                                   'Незавершённый ход отменён. Продолжаем с последнего сохранённого ответа.', 'error')
         return 0
-    except (ClientError, OSError, ValueError) as error:
-        message = str(error) if isinstance(error, ClientError) else 'Не удалось прочитать данные или создать папку отчёта.'
+    except (ClientError, HistoryError, OSError, ValueError) as error:
+        message = str(error) if isinstance(error, (ClientError, HistoryError)) else 'Не удалось прочитать данные.'
         terminal.panel('ОШИБКА ЗАПУСКА', message, 'error')
         return 1
     except KeyboardInterrupt:

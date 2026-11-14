@@ -1,108 +1,118 @@
-"""Каталог и два инструмента вымышленного рынка квартир."""
+"""Детерминированный поиск в фиксированном учебном каталоге."""
 
+from datetime import date
+from copy import deepcopy
 import json
-import math
-import random
+
+from .response import RESPONSE_FORMAT, reply_payload
 
 
-MAX_PRICE = 15_000_000
+PROPERTIES = {
+    'departure_city': {'type': 'string', 'description': 'Город вылета по-русски'},
+    'departure_date': {'type': 'string', 'description': 'Дата вылета YYYY-MM-DD'},
+    'flex_days': {'type': 'integer', 'minimum': 0, 'maximum': 30},
+    'nights_min': {'type': 'integer', 'minimum': 1, 'maximum': 30},
+    'nights_max': {'type': 'integer', 'minimum': 1, 'maximum': 30},
+    'adults': {'type': 'integer', 'minimum': 1, 'maximum': 6},
+    'children_ages': {'type': 'array', 'items': {'type': 'integer', 'minimum': 0, 'maximum': 17}},
+    'budget_total': {'type': 'integer', 'minimum': 1, 'description': 'Бюджет на всех в рублях'},
+    'country': {'type': 'string', 'description': 'Не передавать, если направление не важно'},
+    'resort': {'type': 'string'},
+    'stars_min': {'type': 'integer', 'minimum': 1, 'maximum': 5},
+    'meal': {'type': 'string', 'enum': ['AI', 'HB', 'BB'],
+             'description': 'AI — всё включено, HB — завтрак и ужин, BB — завтрак'},
+    'features': {'type': 'array', 'items': {'type': 'string', 'enum': [
+        'пляжный', 'экскурсионный', 'активный', 'спокойный', 'первая линия', 'для детей', 'без визы']}},
+}
+REQUIRED = ['departure_city', 'departure_date', 'nights_min', 'nights_max',
+            'adults', 'children_ages', 'budget_total']
+SCHEMA_PROPERTIES = deepcopy(PROPERTIES)
+for key, schema in SCHEMA_PROPERTIES.items():
+    schema['type'] = [schema['type'], 'null']
+    if 'enum' in schema:
+        schema['enum'].append(None)
 
-
-def generate_catalog():
-    rng = random.Random(606)
-    districts = ['Адмиралтейский', 'Василеостровский', 'Выборгский', 'Калининский',
-                 'Кировский', 'Колпинский', 'Красногвардейский', 'Красносельский',
-                 'Московский', 'Невский', 'Петроградский', 'Приморский',
-                 'Пушкинский', 'Фрунзенский', 'Центральный']
-    rows = []
-    for index in range(300):
-        rooms = rng.randrange(5)
-        area = round(rng.uniform(22 + rooms * 12, 35 + rooms * 22), 1)
-        price = round(area * rng.randint(180_000, 390_000) / 50_000) * 50_000
-        rows.append({'id': f'SPB-{index + 1:03}', 'city': 'Санкт-Петербург',
-                     'district': districts[index % len(districts)], 'rooms': rooms,
-                     'area_m2': area, 'price': price, 'mock': True})
-    return rows
-
-
-TOOL_SCHEMAS = [
+TOOL_SCHEMAS = [{'type': 'function', 'function': {
+    'name': 'search_tours',
+    'description': 'Поиск путёвок в фиксированном вымышленном каталоге. '
+                   'Цена за всю группу включает перелёт и проживание. '
+                   'Все features обязательны одновременно. Не меняй условия без согласия пользователя. '
+                   'Неизвестные параметры передавай null: поиск без этих ограничений, не выдумывай их. '
+                   'Пустая выдача означает отсутствие вариантов, а не разрешение их придумать.',
+    'strict': True,
+    'parameters': {'type': 'object', 'properties': SCHEMA_PROPERTIES, 'required': list(PROPERTIES),
+                   'additionalProperties': False}}},
     {'type': 'function', 'function': {
-        'name': 'choose_apartment',
-        'description': 'Случайная непросмотренная квартира из учебного каталога СПб. '
-                       'Возвращает ID, район, комнаты, площадь и цену в рублях; '
-                       'если квартира не проходит проверку допустимой цены, возвращает '
-                       'apartment=null, status=price_above_limit и фактический price_limit. '
-                       'Если вариантов нет, apartment=null и status=not_found.',
-        'parameters': {'type': 'object', 'properties': {
-            'max_price': {'type': 'integer', 'minimum': 1,
-                          'description': 'Максимальная цена в рублях, необязательно'}},
-            'additionalProperties': False}}},
-    {'type': 'function', 'function': {
-        'name': 'check_mortgage',
-        'description': 'Вымышленный банк «Нева»: определяет лимит финансирования без взноса '
-                       'и проверяет, хватит ли его на квартиру по ID. '
-                       'Фактический лимит возвращается в результате и сохраняется на весь подбор. '
-                       'Квартира должна пройти проверку допустимой цены.',
-        'parameters': {'type': 'object', 'properties': {
-            'apartment_id': {'type': 'string', 'description': 'ID квартиры, например SPB-001'}},
-            'required': ['apartment_id'], 'additionalProperties': False}}},
-]
+        'name': 'respond_to_user', 'strict': True,
+        'description': 'Передать пользователю один уточняющий вопрос (action=ask) или ответ '
+                       '(action=answer). Не выполняет поиск. Если нужны варианты — сначала '
+                       'вызови search_tours, затем respond_to_user по результату. '
+                       'Нельзя обещать поиск вместо его выполнения.',
+        'parameters': deepcopy(RESPONSE_FORMAT['json_schema']['schema']),
+    }}]
 
 
-class HousingTools:
-    def __init__(self, catalog, rng=None):
-        if not catalog or not 0 < min(r['price'] for r in catalog) <= MAX_PRICE:
-            raise ValueError('Каталог должен содержать квартиру не дороже 15 млн ₽')
+class TravelTools:
+    def __init__(self, catalog):
         self.catalog = catalog
-        self.rng = rng if rng is not None else random.Random()
-        self.bank_limit = None
-        self.seen = set()
-
-    def choose_apartment(self, max_price=None):
-        candidates = [r for r in self.catalog if r['id'] not in self.seen
-                      and (max_price is None or r['price'] <= max_price)]
-        if not candidates:
-            return {'apartment': None, 'status': 'not_found',
-                    'message': 'Новых квартир под это ограничение нет.'}
-        apartment = self.rng.choice(candidates)
-        self.seen.add(apartment['id'])
-        if apartment['price'] > MAX_PRICE:
-            return {'apartment': None, 'status': 'price_above_limit',
-                    'rejected_apartment': apartment, 'price_limit': MAX_PRICE,
-                    'message': 'Квартира не подходит: цена выше допустимого лимита покупки.'}
-        return {'apartment': apartment, 'status': 'found', 'price_limit': MAX_PRICE, 'mock': True}
-
-    def check_mortgage(self, apartment_id):
-        apartment = next((r for r in self.catalog if r['id'] == apartment_id), None)
-        if apartment is None:
-            raise ValueError('Неизвестный ID квартиры')
-        if apartment['price'] > MAX_PRICE:
-            raise ValueError('Квартира дороже 15 млн ₽: не подходит по цене, проверка банка не выполняется')
-        if self.bank_limit is None:
-            self.bank_limit = self.rng.randint(min(r['price'] for r in self.catalog), MAX_PRICE)
-        return {'bank': 'Нева (вымышленный)', 'apartment_id': apartment_id,
-                'price': apartment['price'], 'limit': self.bank_limit,
-                'affordable': apartment['price'] <= self.bank_limit,
-                'shortfall': max(0, apartment['price'] - self.bank_limit), 'mock': True}
 
     def execute(self, name, arguments):
-        """Только разрешённые функции; ошибки аргументов возвращаются модели."""
         try:
+            if name == 'respond_to_user':
+                reply_payload(arguments)
+                return {'status': 'accepted'}
+            if name != 'search_tours':
+                raise ValueError('Неизвестный инструмент')
             args = json.loads(arguments)
-            if not isinstance(args, dict):
-                raise ValueError('Аргументы должны быть JSON-объектом')
-            if name == 'choose_apartment':
-                if set(args) - {'max_price'}:
-                    raise ValueError('Неизвестные аргументы')
-                price = args.get('max_price')
-                if 'max_price' in args and (type(price) is not int or price <= 0
-                                           or not math.isfinite(price)):
-                    raise ValueError('max_price должен быть положительным целым числом')
-                return self.choose_apartment(**args)
-            if name == 'check_mortgage':
-                if set(args) != {'apartment_id'} or not isinstance(args['apartment_id'], str):
-                    raise ValueError('Нужен строковый apartment_id')
-                return self.check_mortgage(**args)
-            raise ValueError('Неизвестный инструмент')
+            if not isinstance(args, dict) or set(args) - PROPERTIES.keys():
+                raise ValueError('Нужны обязательные параметры поиска без неизвестных полей')
+            args = {key: value for key, value in args.items() if value is not None}
+            for key, value in args.items():
+                schema = PROPERTIES[key]
+                if schema['type'] == 'integer':
+                    if type(value) is not int or not schema.get('minimum', 0) <= value <= schema.get('maximum', 10**12):
+                        raise ValueError(f'Некорректное число: {key}')
+                elif schema['type'] == 'string':
+                    if not isinstance(value, str) or not value.strip() or ('enum' in schema and value not in schema['enum']):
+                        raise ValueError(f'Некорректная строка: {key}')
+                elif not isinstance(value, list):
+                    raise ValueError(f'Нужен список: {key}')
+            ages = args.get('children_ages')
+            if ages is not None and (len(ages) > 4 or any(type(age) is not int or not 0 <= age <= 17 for age in ages)):
+                raise ValueError('Возраст детей — целые числа от 0 до 17, не более четырёх детей')
+            features = args.get('features', [])
+            if any(not isinstance(f, str) or f not in PROPERTIES['features']['items']['enum'] for f in features):
+                raise ValueError('Неизвестное пожелание к отдыху')
+            departure = date.fromisoformat(args['departure_date']) if 'departure_date' in args else None
+            if departure is not None and departure.isoformat() != args['departure_date']:
+                raise ValueError('Дата должна быть YYYY-MM-DD')
+            if args.get('nights_min', 1) > args.get('nights_max', 30):
+                raise ValueError('Минимум ночей больше максимума')
+            found = []
+            for tour in self.catalog:
+                if any(tour[key].casefold() != args[key].strip().casefold()
+                       for key in ('departure_city', 'country', 'resort') if key in args):
+                    continue
+                if departure is not None and abs((date.fromisoformat(tour['departure_date']) - departure).days) > args.get('flex_days', 0):
+                    continue
+                if not args.get('nights_min', 1) <= tour['nights'] <= args.get('nights_max', 30):
+                    continue
+                if 'adults' in args and tour['adults'] != args['adults']:
+                    continue
+                if ages is not None and (len(ages) != tour['children'] or any(not tour['child_age_min'] <= age <= tour['child_age_max'] for age in ages)):
+                    continue
+                if tour['price_total'] > args.get('budget_total', 10**12) or tour['stars'] < args.get('stars_min', 1):
+                    continue
+                if 'meal' in args and tour['meal'] != args['meal']:
+                    continue
+                if not set(features) <= set(tour['features']):
+                    continue
+                found.append(tour)
+            ordered = sorted(found, key=lambda t: (t['price_total'], t['id']))
+            return {'mock': True, 'currency': 'RUB', 'tours': ordered[:5],
+                    'count': len(found), 'shown': min(len(found), 5),
+                    'unspecified': [key for key in REQUIRED if key not in args],
+                    'note': 'Показаны до 5 самых дешёвых вариантов. Неизвестные параметры не ограничивали поиск; '
+                            'состав группы каждого варианта и общая цена указаны в выдаче. Данные учебные.'}
         except (ValueError, TypeError, OverflowError) as error:
             return {'error': str(error)}
