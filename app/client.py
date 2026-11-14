@@ -13,7 +13,11 @@ from .response import RESPONSE_FORMAT
 
 
 class ClientError(RuntimeError):
-    pass
+    def __init__(self, message, kind='api', status=None, code=None):
+        super().__init__(message)
+        self.kind = kind
+        self.status = status
+        self.code = code
 
 
 # Соответствие маршрута сообщено пользователем; конкретное имя из API приоритетнее.
@@ -52,6 +56,7 @@ class ChatClient:
         self.opener = build_opener(NoRedirects())
         self.model_catalog = {}
         self.actual_model = KNOWN_MODELS.get(settings['LLM_MODEL'])
+        self.context_window = None
 
     @property
     def model_name(self):
@@ -61,6 +66,11 @@ class ChatClient:
         url = self.settings['LLM_API_URL'].rstrip('/').removesuffix('/chat/completions') + '/models'
         try:
             data = self._request(url, timeout=10)
+            for row in data['data']:
+                if isinstance(row, dict) and row.get('id') == self.settings['LLM_MODEL']:
+                    window = row.get('max_model_len') or row.get('context_length')
+                    if type(window) is int and window > 0:
+                        self.context_window = window
             self.model_catalog = {row['id']: row['real_model'] for row in data['data']
                                   if isinstance(row, dict) and isinstance(row.get('id'), str)
                                   and isinstance(row.get('real_model'), str)}
@@ -107,9 +117,32 @@ class ChatClient:
                 return json.loads(response.read().decode('utf-8'))
         except HTTPError as error:
             status = error.code
+            code, detail = '', ''
+            try:
+                payload = json.loads(error.read(16384).decode('utf-8'))
+                info = payload.get('error', {})
+                if isinstance(info, dict):
+                    code = str(info.get('code') or info.get('type') or '')
+                    detail = str(info.get('message') or '')
+                elif isinstance(info, str):
+                    detail = info
+                if not detail:
+                    detail = str(payload.get('message') or payload.get('detail') or '')
+            except (ValueError, UnicodeError, OSError, AttributeError):
+                pass
             error.close()
-            raise ClientError(f'API вернул HTTP {status}. Проверьте доступ и поддержку '
-                              'моделью tools и response_format=json_schema (strict).') from None
+            detail = detail.replace(self.settings['LLM_API_KEY'], '[скрыто]')
+            detail = ''.join(c for c in detail if c.isprintable())[:1000]
+            context_error = status == 400 and (code in ('1261', 'context_length_exceeded') or any(
+                phrase in detail.lower() for phrase in (
+                    'context length exceeded', 'prompt too long',
+                    'longer than the maximum model length', 'exceeds the maximum context'))
+                or ('maximum context length' in detail.lower() and
+                    any(word in detail.lower() for word in ('requested', 'exceed', 'resulted', 'input'))))
+            raise ClientError(f'API HTTP {status}' + (f' · {code}' if code else '')
+                              + (f': {detail}' if detail else ': описание ошибки отсутствует.'),
+                              kind='context_length' if context_error else 'api',
+                              status=status, code=code) from None
         except URLError as error:
             if isinstance(error.reason, socket.gaierror):
                 raise ClientError('Адрес API не найден в DNS. Проверьте LLM_API_URL и доступ к корпоративной сети/VPN.') from None

@@ -8,6 +8,8 @@ from .client import ClientError
 from .tools import TOOL_SCHEMAS
 from .history import HistoryError
 from .response import answer_text, reply_payload
+from .tokens import TokenMeter, TokenCounter
+from .response import RESPONSE_FORMAT
 
 
 SYSTEM_PROMPT = '''Ты — агент подбора путёвки «Компас». Общайся по-русски.
@@ -52,6 +54,11 @@ OPENING_QUESTION = ('Откуда летим?\n1. Москва\n2. Санкт-П
 
 
 def opening_messages(question=OPENING_QUESTION):
+    """Стартовая реплика приложения без фиктивного вызова инструмента."""
+    return [{'role': 'assistant', 'content': question}]
+
+
+def legacy_opening_messages(question=OPENING_QUESTION):
     """Локальный стартовый вопрос, не выдаваемый за ответ API."""
     return [
         {'role': 'assistant', 'content': None, 'tool_calls': [
@@ -78,6 +85,22 @@ class Agent:
         self.messages = loaded if loaded is not None else [{'role': 'system', 'content': SYSTEM_PROMPT}]
         self.events = []
         self.trace = []
+        self.meter = TokenMeter()
+        self.turn_meter = TokenMeter()
+        self.message_estimate = 0
+        self.previous_first_input = None
+        self.counter = TokenCounter(client.model_name)
+
+    def token_stats(self):
+        first = self.trace[0].get('usage') if self.trace else None
+        incoming = first['prompt_tokens'] if first else None
+        return {'message_estimate': self.message_estimate,
+                'history_estimate': self.counter.value(self.messages),
+                'count_method': self.counter.method,
+                'first_input_tokens': incoming,
+                'input_growth': (incoming - self.previous_first_input
+                                 if incoming is not None and self.previous_first_input is not None else None),
+                'turn': self.turn_meter.summary(), 'session': self.meter.summary()}
 
     def start_dialog(self):
         if len(self.messages) != 1:
@@ -99,8 +122,12 @@ class Agent:
         if '\ufffd' in text:
             raise AgentError('Во вводе найден символ замены �. Сообщение не отправлено и не сохранено. '
                              'Введите текст заново.')
+        first = self.trace[0].get('usage') if self.trace else None
+        self.previous_first_input = first['prompt_tokens'] if first else None
         self.events = []
         self.trace = []
+        self.turn_meter = TokenMeter()
+        self.message_estimate = self.counter.text(text)
         start = len(self.messages)
         self.messages.append({'role': 'user', 'content': text})
         try:
@@ -119,7 +146,9 @@ class Agent:
         questions = sum(1 for m in self.messages if m['role'] == 'assistant'
                         for call in m.get('tool_calls', [])
                         if call['id'] in accepted and call['function']['name'] == 'respond_to_user'
-                        and self._is_question(call['function']['arguments']))
+                         and self._is_question(call['function']['arguments']))
+        if self.messages[1:2] == opening_messages():
+            questions += 1
         had_search = any(m['role'] == 'tool' and 'tours' in json.loads(m['content'])
                          for m in self.messages)
         for step in range(1, self.max_steps + 1):
@@ -148,22 +177,35 @@ class Agent:
                 '«Свой бюджет и отель». Это примеры пожеланий, не гарантия наличия тура. '
                 'Не уточняй отдельно необязательные детали, если их можно оставить null.'
             )
-            request = {'messages': deepcopy(self.messages) + [{'role': 'system', 'content': control}],
+            messages = deepcopy(self.messages)
+            messages[0]['content'] += '\n\n' + control
+            request = {'messages': messages,
                        'tools': deepcopy(TOOL_SCHEMAS[:1] if must_search else TOOL_SCHEMAS),
                        'tool_choice': 'required'}
+            input_estimate = self.counter.value({**request, 'response_format': RESPONSE_FORMAT})
             started = time.perf_counter()
             if self.on_progress:
                 self.on_progress({'kind': 'request', 'step': step})
             try:
                 response = self.client.complete(**request)
             except ClientError as error:
+                # При таймауте сервер мог уже выполнить генерацию: расход неизвестен,
+                # а не равен нулю.
+                self.meter.record({})
+                self.turn_meter.record({})
                 self.trace.append({'step': step, 'request': request, 'error': str(error),
-                                   'seconds': time.perf_counter() - started})
+                                   'seconds': time.perf_counter() - started,
+                                    'input_estimate': input_estimate, 'usage': None,
+                                    'error_kind': error.kind, 'http_status': error.status,
+                                    'error_code': error.code})
                 if self.on_progress:
                     self.on_progress({'kind': 'error', 'step': step})
                 raise
             self.trace.append({'step': step, 'request': request, 'response': deepcopy(response),
-                               'seconds': time.perf_counter() - started})
+                               'seconds': time.perf_counter() - started,
+                               'input_estimate': input_estimate,
+                               'usage': self.meter.record(response)})
+            self.turn_meter.record(response)
             if self.on_progress:
                 self.on_progress({'kind': 'response', 'step': step,
                                   'seconds': self.trace[-1]['seconds']})

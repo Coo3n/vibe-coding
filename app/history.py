@@ -35,7 +35,7 @@ def validate_tool_result(result):
 
 def validate_messages(messages):
     # Поздний импорт не создаёт цикла при загрузке Agent.
-    from .agent import SYSTEM_PROMPT, opening_messages, LEGACY_OPENING_QUESTION
+    from .agent import SYSTEM_PROMPT, opening_messages, legacy_opening_messages, LEGACY_OPENING_QUESTION
 
     try:
         if not isinstance(messages, list) or not messages:
@@ -46,7 +46,9 @@ def validate_messages(messages):
         pending = None
         used = set()
         remaining = messages[1:]
-        if remaining[:2] in (opening_messages(), opening_messages(LEGACY_OPENING_QUESTION)):
+        if remaining[:1] == opening_messages():
+            remaining = remaining[1:]
+        elif remaining[:2] in (legacy_opening_messages(), legacy_opening_messages(LEGACY_OPENING_QUESTION)):
             remaining = remaining[2:]
             used.add('local-opening-question')
         for message in remaining:
