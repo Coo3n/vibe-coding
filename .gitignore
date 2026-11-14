@@ -1,0 +1,10 @@
+.env
+.venv/
+.idea/
+__pycache__/
+*.py[cod]
+.superpowers/
+results/local-*/
+results/tokens-*/
+data/session.json
+data/.session-*.tmp

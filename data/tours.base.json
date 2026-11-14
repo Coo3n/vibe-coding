@@ -1,0 +1,44 @@
+[
+  {
+    "id": "TR-001", "hotel": "Учебный отель «Лагуна»", "departure_city": "Москва",
+    "country": "Турция", "resort": "Анталья", "departure_date": "2027-06-10", "nights": 7,
+    "adults": 2, "children": 0, "child_age_min": 0, "child_age_max": 17,
+    "price_total": 145000, "stars": 4, "meal": "AI",
+    "features": ["пляжный", "спокойный", "первая линия", "без визы"], "mock": true
+  },
+  {
+    "id": "TR-002", "hotel": "Учебный отель «Морской сад»", "departure_city": "Москва",
+    "country": "Турция", "resort": "Анталья", "departure_date": "2027-06-10", "nights": 7,
+    "adults": 2, "children": 0, "child_age_min": 0, "child_age_max": 17,
+    "price_total": 178000, "stars": 5, "meal": "AI",
+    "features": ["пляжный", "спокойный", "первая линия", "активный", "без визы"], "mock": true
+  },
+  {
+    "id": "TR-003", "hotel": "Учебный отель «Семейный берег»", "departure_city": "Москва",
+    "country": "Турция", "resort": "Сиде", "departure_date": "2027-06-12", "nights": 10,
+    "adults": 2, "children": 1, "child_age_min": 0, "child_age_max": 11,
+    "price_total": 235000, "stars": 5, "meal": "AI",
+    "features": ["пляжный", "спокойный", "первая линия", "для детей", "без визы"], "mock": true
+  },
+  {
+    "id": "EG-001", "hotel": "Учебный отель «Коралловая бухта»", "departure_city": "Санкт-Петербург",
+    "country": "Египет", "resort": "Хургада", "departure_date": "2027-06-10", "nights": 7,
+    "adults": 2, "children": 0, "child_age_min": 0, "child_age_max": 17,
+    "price_total": 155000, "stars": 4, "meal": "AI",
+    "features": ["пляжный", "активный", "первая линия"], "mock": true
+  },
+  {
+    "id": "TR-004", "hotel": "Учебный отель «Солнечный берег»", "departure_city": "Санкт-Петербург",
+    "country": "Турция", "resort": "Анталья", "departure_date": "2027-06-12", "nights": 7,
+    "adults": 2, "children": 0, "child_age_min": 0, "child_age_max": 17,
+    "price_total": 165000, "stars": 4, "meal": "AI",
+    "features": ["пляжный", "спокойный", "первая линия", "без визы"], "mock": true
+  },
+  {
+    "id": "RU-001", "hotel": "Учебный отель «Городской»", "departure_city": "Москва",
+    "country": "Россия", "resort": "Сочи", "departure_date": "2027-06-10", "nights": 7,
+    "adults": 2, "children": 0, "child_age_min": 0, "child_age_max": 17,
+    "price_total": 95000, "stars": 3, "meal": "BB",
+    "features": ["экскурсионный", "активный", "без визы"], "mock": true
+  }
+]
