@@ -53,24 +53,24 @@ def write_report(report, directory):
         rows.append(f"- {label}: **{score['correct']}/{score['total']}**; выполнено {score['checked']} проверок.")
     lost = report['lost_after_compression']
     rows += ['', 'Детали, прошедшие без сжатия, но не прошедшие со сжатием: ' + (', '.join(lost) if lost else 'не обнаружены в выполненных проверках') + '.',
-             '', '## Фактические токены API', '', '| Этап | Запросов | Вход | Выход | Всего |', '|---|---:|---:|---:|---:|']
-    labels = [('preparation', 'Общая подготовка диалога, включая tools'), ('summary', 'Создание summary'),
-              ('full_probes', '20 проверок без сжатия'), ('compressed_probes', '20 проверок со сжатием'),
-              ('full_comparison', 'Сравнение: полная история'),
-              ('compressed_comparison', 'Сравнение: сжатая история + summary'),
-              ('full_total', 'Полный режим с общей подготовкой'),
-              ('compressed_total', 'Сжатый режим с общей подготовкой'), ('actual_run', 'Реально потрачено на весь эксперимент')]
-    for key, label in labels:
-        usage = report['usage'][key]
-        rows.append(f"| {label} | {usage['requests']} | {number(usage['prompt_tokens'])} | "
-                    f"{number(usage['completion_tokens'])} | {number(usage['total_tokens'])} |")
+             '', '## Два случая: без сжатия и со сжатием', '',
+             '| Показатель | 1. Без сжатия | 2. Со сжатием |', '|---|---:|---:|',
+             '| Контекст каждого вопроса | Вся переписка | Summary + хвост |']
+    for key, label in (('prompt_tokens', 'Входные токены'), ('completion_tokens', 'Выходные токены'),
+                       ('total_tokens', 'Всего токенов')):
+        rows.append(f"| {label} | {number(report['usage']['full_comparison'][key])} | "
+                    f"{number(report['usage']['compressed_comparison'][key])} |")
+    rows += [f"| Из них создание summary | 0 | {number(report['usage']['summary']['total_tokens'])} |", '',
+             '**Summary уже включено в итог второго случая.** Это не отдельный режим и не дополнительная сумма к итогу.']
     saving = report['savings']
     rows += ['', f"Экономия на проверках **с учётом summary**: {number(saving['tokens'])} токенов "
              f"({saving['percent'] if saving['percent'] is not None else '?'}%).", '',
              'Это измерение повторных запросов к одному готовому диалогу, а не экономии '
-             'при генерации второго независимого диалога. Общая подготовка одинакова в обоих итогах. '
-             'Два итоговых режима перекрываются по подготовке; их нельзя складывать. '
-             'Отдельная строка показывает реально потраченные токены.', '',
+             'при генерации второго независимого диалога. '
+             f"Общая подготовка переписки: {number(report['usage']['preparation']['total_tokens'])} токенов; "
+             'она выполнена один раз до сравнения и не включена в таблицу. '
+             f"Всего реально потрачено на запуск: {number(report['usage']['actual_run']['total_tokens'])} токенов. "
+             'Подробный учёт этапов находится в report.json.', '',
              '`?` означает неизвестный usage, не ноль. Кэшированные токены уже входят во вход. '
              'Стоимость в деньгах не рассчитывается. Один прогон не доказывает сохранение любых фактов.', '',
              '## Сжатия', '']

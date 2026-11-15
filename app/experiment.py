@@ -59,7 +59,7 @@ def summarize(report):
                                        compact.get(f['id']) and not compact[f['id']].get('correct')]
 
 
-def run_experiment(client, directory, on_event=None, keep_last=8, compress_every=10, turns=30):
+def run_experiment(client, directory, on_event=None, keep_last=8, compress_every=10, turns=15):
     if type(turns) is not int or turns not in (15, 30):
         raise ValueError('Для эксперимента выберите 15 или 30 ходов.')
     prompts = PROMPTS[:turns]

@@ -101,6 +101,11 @@ class Terminal:
                        '\n'.join('• ' + s for s in data['summary']['facts']), 'tool')
             self.usage(data['trace'])
         elif kind == 'probe_start':
+            if event['number'] == 1:
+                self.panel('СЛУЧАЙ 1 · БЕЗ СЖАТИЯ' if event['mode'] == 'full' else 'СЛУЧАЙ 2 · СО СЖАТИЕМ',
+                           'Каждый вопрос получает всю исходную переписку.' if event['mode'] == 'full' else
+                           'Каждый вопрос получает summary и последние сообщения.\n'
+                           'Расход создания summary включён в итог этого случая.')
             label = 'полная история' if event['mode'] == 'full' else 'summary + хвост'
             self.console.print(Text(f"  → Память {event['number']}/20 · {label} · {event['fact']['label']}", style='dim'))
         elif kind == 'probe':
@@ -128,20 +133,25 @@ class Terminal:
                 cells.append(Text(clean(mark + value), style='green' if evaluation and evaluation['correct'] else 'yellow'))
             table.add_row(Text(fact['label']), Text(fact['expected']), *cells)
         self.console.print(table)
-        costs = Table(title='ТОКЕНЫ · фактический usage API', box=box.SIMPLE_HEAVY)
-        for heading in ('Этап', 'Вход', 'Выход', 'Всего'):
-            costs.add_column(heading, justify='left' if heading == 'Этап' else 'right')
-        for key, label in (('preparation', 'Общий диалог с tools'), ('summary', 'Создание summary'),
-                           ('full_comparison', 'Проверки: без сжатия'),
-                           ('compressed_comparison', 'Проверки: со сжатием + summary'),
-                           ('actual_run', 'Весь эксперимент')):
-            stats = report['usage'][key]
-            costs.add_row(label, *(number(stats[k]) for k in ('prompt_tokens', 'completion_tokens', 'total_tokens')))
-        self.console.print(costs)
         scores = report['score']
+        comparison = Table(title='ДВА СЛУЧАЯ · одинаковые 20 вопросов', box=box.SIMPLE_HEAVY)
+        comparison.add_column('Показатель')
+        comparison.add_column('1. Без сжатия', justify='right')
+        comparison.add_column('2. Со сжатием', justify='right')
+        comparison.add_row('Контекст каждого вопроса', 'Вся переписка', 'Summary + хвост')
+        comparison.add_row('Детали: точные совпадения',
+                           f"{scores['full']['correct']}/20", f"{scores['compressed']['correct']}/20")
+        for key, label in (('prompt_tokens', 'Входные токены'), ('completion_tokens', 'Выходные токены'),
+                           ('total_tokens', 'Всего токенов')):
+            comparison.add_row(label, number(report['usage']['full_comparison'][key]),
+                                number(report['usage']['compressed_comparison'][key]))
+        comparison.add_row('Из них создание summary', '0', number(report['usage']['summary']['total_tokens']))
+        self.console.print(comparison)
+        self.console.print(Text('  Summary уже включено в итог второго случая — повторно не прибавлять.\n'
+                                '  Сравниваем проверки одной готовой переписки. Общая подготовка учтена отдельно в report.json.\n'
+                                '  Несовпадение формулировки требует сверки: это не обязательно забытый факт.', style='dim'))
         saving = report['savings']
-        self.panel('ИТОГ', f"Память: без сжатия {scores['full']['correct']}/20 · со сжатием {scores['compressed']['correct']}/20\n"
-                   f"Экономия на проверках с учётом summary: {number(saving['tokens'])} токенов "
+        self.panel('ИТОГ', f"Экономия второго случая с учётом summary: {number(saving['tokens'])} токенов "
                    f"({saving['percent'] if saving['percent'] is not None else '?'}%).\n"
                    f"Статус: {report['status']}. Отсутствующий usage обозначен «?».",
                    'answer' if report['status'] == 'completed' else 'error')
@@ -193,8 +203,8 @@ def main():
     parser.add_argument('--env', type=Path, default=ROOT / '.env')
     parser.add_argument('--model', help='Маршрут модели, иначе LLM_MODEL из .env')
     parser.add_argument('--demo', action='store_true', help='Автономный эксперимент: диалог, summary и проверки памяти')
-    parser.add_argument('--turns', type=int, choices=(15, 30), default=30,
-                        help='Ходов user+agent: 15 = 30 сообщений, 30 = 60 сообщений (по умолчанию)')
+    parser.add_argument('--turns', type=int, choices=(15, 30), default=15,
+                        help='Ходов user+agent: 15 = 30 сообщений по ТЗ (по умолчанию), 30 = 60 сообщений')
     parser.add_argument('--chat', action='store_true', help='Ручной чат вместо меню')
     parser.add_argument('--mode', choices=('full', 'compressed'), default='compressed')
     parser.add_argument('--keep-last', type=int, default=8)
@@ -227,7 +237,9 @@ def main():
         if args.demo:
             directory = args.output_dir or ROOT / 'results' / ('local-day9-' + datetime.now().strftime('%Y%m%d-%H%M%S-%f'))
             terminal.panel('ЭКСПЕРИМЕНТ · ЧТО СРАВНИВАЕМ',
-                           'Одна реальная переписка → полная история и summary + хвост.\n'
+                           f'Подготавливаем один диалог на {args.turns * 2} сообщений.\n'
+                           'Случай 1: без сжатия — вся переписка.\n'
+                           'Случай 2: со сжатием — summary + последние сообщения.\n'
                            '20 вопросов к каждому контексту; ответы проверок не освежают память.\n'
                            'Расход summary включён в сравнение. Всё общение с LLM — JSON.\n'
                            f'Модель: {client.model_name} · N={args.keep_last} · порция={args.compress_every}')
