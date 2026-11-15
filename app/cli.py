@@ -83,9 +83,14 @@ class Terminal:
             full = event['mode'] == 'full'
             self.console.rule(Text('ТЕСТ 1 · БЕЗ СЖАТИЯ' if full else 'ТЕСТ 2 · СО СЖАТИЕМ',
                                    style='bold ' + COLORS['user' if full else 'answer']))
-            self.panel('ЧТО ПРОВЕРЯЕМ',
-                       '20 вопросов. В каждый запрос отправляем ВСЮ переписку.' if full else
-                       'Создаём summary, затем задаём 20 вопросов.\nВ запрос идёт SUMMARY + ХВОСТ. Стоимость summary включена.',
+            text = ('20 вопросов. В каждый запрос отправляем ВСЮ переписку.' if full else
+                    'Создаём summary, затем задаём 20 вопросов.\nВ запрос идёт SUMMARY + ХВОСТ. Стоимость summary включена.')
+            if event.get('live'):
+                text = (f"Диалог: {event['turns']} ходов, затем 20 вопросов по памяти.\n" +
+                        ('История передаётся целиком, сжатия нет.' if full else
+                         f"Сжатие прямо в диалоге каждые {event['every_turns']} ходов.\n"
+                         'После summary вход следующего запроса должен уменьшиться.'))
+            self.panel('ЧТО ПРОВЕРЯЕМ', text,
                        'user' if full else 'answer')
             return
         if kind == 'case_complete':
@@ -174,7 +179,7 @@ class Terminal:
             change = '= 0'
         if self.demo_mode and not self.verbose:
             phase = progress['phase']
-            color = COLORS['tool' if phase == 'summary' else 'answer' if phase == 'compressed' else 'user']
+            color = COLORS['tool' if phase == 'summary' else 'answer' if phase.endswith('compressed') else 'user']
             short_delta = '—' if delta is None else f'{delta:+,}'.replace(',', ' ')
             label = self.step_label or f"API #{progress['request_number']}"
             self.console.print(Text.assemble(
@@ -209,9 +214,10 @@ class Terminal:
     def case_result(self, report, mode):
         score = report['score'][mode]
         stats = report['usage'][mode + '_comparison']
+        label = ('Полный расход теста: диалог + проверка памяти' if report.get('live_compression') else
+                 'Только проверка памяти (без создания диалога)')
         text = (f"Точные совпадения: {score['correct']}/{score['total']} · проверено {score['checked']}\n"
-                f"Только проверка памяти{' + summary' if mode == 'compressed' else ''}: "
-                f"{number(stats['total_tokens'])} токенов (без создания диалога)")
+                f"{label}: {number(stats['total_tokens'])} токенов")
         if mode == 'compressed':
             text += f" · из них summary {number(report['usage']['summary']['total_tokens'])} (уже включены)"
         self.panel('ИТОГ ТЕСТА 1 · БЕЗ СЖАТИЯ' if mode == 'full' else 'ИТОГ ТЕСТА 2 · СО СЖАТИЕМ',
@@ -219,7 +225,12 @@ class Terminal:
 
     def run_cost(self, report):
         usage = report['usage']
-        lines = [f"Создание диалога: {number(usage['preparation']['total_tokens'])}"]
+        if report.get('live_compression'):
+            lines = [f"Диалог {'без сжатия' if mode == 'full' else 'со сжатием'}: "
+                     f"{number(usage[mode + '_dialogue']['total_tokens'])}"
+                     for mode in ('full', 'compressed') if usage[mode + '_dialogue']['requests']]
+        else:
+            lines = [f"Создание диалога: {number(usage['preparation']['total_tokens'])}"]
         if report['compressions']:
             lines.append(f"Создание summary: {number(usage['summary']['total_tokens'])}")
         if report['probes']['full']:
@@ -258,7 +269,9 @@ class Terminal:
                                     'Несовпадение формулировки требует сверки.', style='dim'))
             return
         scores = report['score']
-        comparison = Table(title='СРАВНЕНИЕ ПРОВЕРОК · без стоимости создания диалога', box=box.SIMPLE_HEAVY)
+        live = report.get('live_compression', False)
+        comparison = Table(title='ПОЛНЫЙ РАСХОД · диалог + summary + проверка памяти' if live else
+                           'СРАВНЕНИЕ ПРОВЕРОК · без стоимости создания диалога', box=box.SIMPLE_HEAVY)
         comparison.add_column('Показатель')
         comparison.add_column('1. Без сжатия', justify='right')
         comparison.add_column('2. Со сжатием', justify='right')
@@ -266,16 +279,18 @@ class Terminal:
         comparison.add_row('Детали: точные совпадения',
                            f"{scores['full']['correct']}/20", f"{scores['compressed']['correct']}/20")
         for key, label in (('prompt_tokens', 'Входные токены'), ('completion_tokens', 'Выходные токены'),
-                            ('total_tokens', 'Проверки + summary')):
+                            ('total_tokens', 'Всего на тест' if live else 'Проверки + summary')):
             comparison.add_row(label, number(report['usage']['full_comparison'][key]),
                                 number(report['usage']['compressed_comparison'][key]))
         comparison.add_row('Из них создание summary', '0', number(report['usage']['summary']['total_tokens']))
         self.console.print(comparison)
         self.console.print(Text('  Summary уже включено в итог второго случая — повторно не прибавлять.\n'
-                                '  Сравниваем проверки одной готовой переписки. Общая подготовка учтена отдельно в report.json.\n'
+                                + ('  Одинаковые сообщения пользователя; ответы агента в двух диалогах могут различаться.\n' if live else
+                                   '  Сравниваем проверки одной готовой переписки. Общая подготовка учтена отдельно в report.json.\n') +
                                 '  Несовпадение формулировки требует сверки: это не обязательно забытый факт.', style='dim'))
         saving = report['savings']
-        self.panel('ЭКОНОМИЯ ПРОВЕРОК', f"Экономия второго случая с учётом summary: {number(saving['tokens'])} токенов "
+        self.panel('ЭКОНОМИЯ ПОЛНОГО ТЕСТА' if live else 'ЭКОНОМИЯ ПРОВЕРОК',
+                   f"Экономия второго случая с учётом summary: {number(saving['tokens'])} токенов "
                    f"({saving['percent'] if saving['percent'] is not None else '?'}%).\n"
                    f"Статус: {report['status']}. Отсутствующий usage обозначен «?».",
                     'answer' if report['status'] == 'completed' else 'error')
@@ -289,7 +304,7 @@ def chat(client, terminal, args):
         raise ContextError('Настройки сохранённой сессии отличаются. Укажите другой --session или прежние настройки.')
     agent = Agent(client, context, path, on_event=terminal.event)
     terminal.panel('ОВОЩНОЙ ПРИЛАВОК · ЧАТ',
-                   f"Режим: {args.mode} · последние {args.keep_last} сообщений · порция {args.compress_every}\n"
+                   f"Режим: {args.mode} · последние {args.keep_last} сообщений · сжатие каждые {args.compress_every // 2} ходов\n"
                    '/summary — JSON-summary · /history — хвост · /new — новый диалог · /exit — выход\n'
                    'Введите обычный текст: программа отправит его в JSON-обёртке.')
     while True:
@@ -337,7 +352,7 @@ def main():
     parser.add_argument('--mode', choices=('full', 'compressed'), default='compressed')
     parser.add_argument('--keep-last', type=int, default=8)
     parser.add_argument('--compress-every', type=int, default=20,
-                        help='Сжимать порцию из N старых видимых сообщений (по умолчанию 20)')
+                        help='Интервал в видимых сообщениях: 20 = каждые 10 ходов (по умолчанию)')
     parser.add_argument('--output-dir', type=Path, help='Новая папка результатов эксперимента')
     parser.add_argument('--session', type=Path, help='Файл ручного чата')
     args = parser.parse_args()
@@ -376,7 +391,9 @@ def main():
             title = {'full': 'ТЕСТ 1 · БЕЗ СЖАТИЯ', 'compressed': 'ТЕСТ 2 · СО СЖАТИЕМ',
                      'both': 'ДВА АВТОМАТИЧЕСКИХ ТЕСТА'}[args.case]
             terminal.panel(title, f'{args.turns * 2} сообщений · 20 контрольных деталей\n'
-                           f'Модель: {client.model_name} · последние {args.keep_last} · порция сжатия {args.compress_every}\n'
+                           f'Модель: {client.model_name}\n' +
+                           ('Вся история сохраняется без сжатия.\n' if args.case == 'full' else
+                            f'Последние {args.keep_last} сообщений целиком · сжатие каждые {args.compress_every // 2} ходов\n') +
                            'Синий — без сжатия · зелёный — со сжатием · жёлтый — summary\n'
                            'Красный — ошибка или ответ для сверки. Подробности: --verbose и отчёты.')
             if terminal.verbose:

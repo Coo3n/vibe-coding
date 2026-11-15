@@ -19,25 +19,33 @@ def write_report(report, directory):
     turns = report['settings'].get('turns', 15)
     case = report.get('case', 'both')
     modes = ('full', 'compressed') if case == 'both' else (case,)
+    live = report.get('live_compression', False)
     labels = {'full': 'Без сжатия', 'compressed': 'Со сжатием'}
     atomic_json(directory / 'report.json', report)
     rows = ['# День 9 · Овощной онлайн-прилавок', '',
             f"Статус: **{report['status']}**. Модель API: `{report['model']}`.", '',
             f"## Всего за запуск: {number(report['usage']['actual_run']['total_tokens'])} токенов", '',
             'Полный фактический расход: создание диалога + все выполненные сжатия + все выполненные проверки памяти. '
-            'Каждый запрос учтён один раз. Таблица сравнения ниже относится только к проверкам и summary, не ко всему запуску.', '',
+            'Каждый запрос учтён один раз. ' +
+            ('Таблица сравнения включает диалог, summary и проверки каждого режима.' if live else
+             'Таблица сравнения ниже относится только к проверкам и summary, не ко всему запуску.'), '',
             '## Методика', '', report['method'], '',
             f'План: {turns} пользовательских сообщений + {turns} финальных ответов = {turns * 2} видимых сообщений. '
             'Tool calls и результаты — дополнительные служебные записи. '
             'Числа N и порции относятся к видимым сообщениям; служебные записи сохраняются вместе с ходом.', '',
-            f"Фактически завершено ходов: {sum(row.get('turn') is not None for row in report['dialogue'])}/{turns}.", '',
+            f"Фактически завершено ходов: {sum(row.get('turn') is not None for row in report['dialogue'])}/"
+            f"{turns * len(modes) if live else turns}.", '',
             'Ответы на вопросы не добавляются в контекст других проверок. Эталонные значения '
             'не передаются модели. Каталог учебный, факты о договорённостях инструменты не хранят.', '']
     if report.get('error'):
         rows += ['**Ошибка / неполный прогон:** ' + report['error'], '']
     if 'counts' in report:
         counts = report['counts']
-        rows += [f"Сжатий: {counts['compressions']}; записей полной истории: {counts['full_records']}.", '']
+        rows += [f"Сжатий: {counts['compressions']}.", '']
+        if counts.get('compression_attempts', counts['compressions']) != counts['compressions']:
+            rows += [f"Попыток сжатия, включая неудачные: {counts['compression_attempts']}.", '']
+        if counts['full_records'] is not None:
+            rows += [f"Записей полной истории: {counts['full_records']}.", '']
         if counts['compressed_tail_records'] is not None:
             rows += [f"В хвосте: {counts['compressed_tail_records']} записей / "
                      f"{counts['compressed_tail_visible_messages']} видимых сообщений.", '']
@@ -63,7 +71,8 @@ def write_report(report, directory):
     if case == 'both':
         rows += ['', 'Детали, прошедшие без сжатия, но не прошедшие со сжатием: ' +
                  (', '.join(lost) if lost else 'не обнаружены в выполненных проверках') + '.']
-    rows += ['', '## Расход проверок памяти (без создания диалога)', '', '| Показатель | ' + ' | '.join(labels[m] for m in modes) + ' |',
+    rows += ['', '## Полный расход тестов (диалог + summary + проверки)' if live else
+             '## Расход проверок памяти (без создания диалога)', '', '| Показатель | ' + ' | '.join(labels[m] for m in modes) + ' |',
              '|---|' + '---:|' * len(modes), '| Контекст каждого вопроса | ' +
              ' | '.join('Вся переписка' if m == 'full' else 'Summary + хвост' for m in modes) + ' |']
     for key, label in (('prompt_tokens', 'Входные токены'), ('completion_tokens', 'Выходные токены'),
@@ -75,15 +84,19 @@ def write_report(report, directory):
                  '**Summary уже включено в итог теста со сжатием.** Повторно прибавлять его не нужно.']
     saving = report['savings']
     if case == 'both':
-        rows += ['', f"Экономия на проверках **с учётом summary**: {number(saving['tokens'])} токенов "
+        rows += ['', f"Экономия {'полного теста' if live else 'на проверках'} **с учётом summary**: {number(saving['tokens'])} токенов "
                  f"({saving['percent'] if saving['percent'] is not None else '?'}%)."]
     else:
-        rows += ['', 'Выполнен один выбранный тест. Для расчёта экономии запустите оба теста на одной переписке (--case both).']
-    rows += ['',
+        rows += ['', 'Выполнен один выбранный тест. Для расчёта экономии запустите оба теста (--case both).']
+    method_note = ((('Это два независимо сгенерированных диалога с одинаковыми пользовательскими сообщениями. '
+                    'Ответы модели могут различаться. ') if case == 'both' else 'Это один выбранный живой диалог. ') +
+                   ('Сжатие выполняется по ходу общения. ' if case != 'full' else 'Сжатие выключено. ') +
+                   'В таблицу входят все запросы соответствующего режима.' if live else
              'Это измерение повторных запросов к одному готовому диалогу, а не экономии '
              'при генерации второго независимого диалога. '
              f"Общая подготовка переписки: {number(report['usage']['preparation']['total_tokens'])} токенов; "
-             'она выполнена один раз до сравнения и не включена в таблицу. '
+             'она выполнена один раз до сравнения и не включена в таблицу.')
+    rows += ['', method_note, '',
              f"Всего реально потрачено на запуск: {number(report['usage']['actual_run']['total_tokens'])} токенов. "
              'Подробный учёт этапов находится в report.json.', '',
              '`?` означает неизвестный usage, не ноль. Кэшированные токены уже входят во вход. '

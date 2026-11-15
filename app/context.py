@@ -105,10 +105,10 @@ class Context:
     def compress(self, client, traces=None):
         traces = [] if traces is None else traces
         start = len(traces)
-        if self.mode == 'full':
+        if not self.should_compress():
             return []
-        while self.visible_messages - self.keep_last >= self.compress_every:
-            count = self.compress_every // 2
+        while self.should_compress():
+            count = (self.visible_messages - self.keep_last) // 2
             inputs = [
                 {'role': 'system', 'content': dumps({
                     'task': 'Сожми данные переписки в JSON по схеме. Не отвечай собеседнику.',
@@ -126,8 +126,13 @@ class Context:
             summary = invoke(client, inputs, 'summary', traces)
             self.summary = summary
             del self.turns[:count]
-            self.compressed_messages += self.compress_every
+            self.compressed_messages += count * 2
         return traces[start:]
+
+    def should_compress(self):
+        total = self.compressed_messages + self.visible_messages
+        return (self.mode == 'compressed' and self.visible_messages > self.keep_last
+                and total > 0 and total % self.compress_every == 0)
 
     def to_dict(self):
         return deepcopy({'version': 2, 'mode': self.mode, 'keep_last': self.keep_last,
@@ -151,7 +156,7 @@ class Context:
                 raise ValueError
             context = cls(data['mode'], data['keep_last'], data['compress_every'])
             count = data['compressed_messages']
-            if type(count) is not int or count < 0 or count % context.compress_every:
+            if type(count) is not int or count < 0 or count % 2:
                 raise ValueError
             if not isinstance(data['turns'], list):
                 raise ValueError

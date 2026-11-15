@@ -27,6 +27,7 @@ def savings(before, after):
 
 
 PHASES = {'chat': 'Ручной чат', 'dialogue': 'Подготовка диалога', 'summary': 'Создание summary',
+          'dialogue_full': 'Диалог без сжатия', 'dialogue_compressed': 'Диалог со сжатием',
           'full': 'Случай 1 · без сжатия', 'compressed': 'Случай 2 · со сжатием'}
 
 
@@ -64,4 +65,4 @@ def progress_rows(report):
     if traces and all('progress' in trace for _, trace in traces):
         traces.sort(key=lambda item: item[1]['progress']['request_number'])
     for phase, trace in traces:
-        yield tracker.record(trace, phase)
+        yield tracker.record(trace, trace.get('progress', {}).get('phase', phase))

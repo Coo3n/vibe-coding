@@ -24,7 +24,17 @@ class Agent:
         working = deepcopy(self.context)
         self.trace = []
         # Retry any pending compaction before adding another turn.
-        working.compress(self.client, self.trace)
+        def compact():
+            if not working.should_compress():
+                return
+            after = working.compressed_messages + working.visible_messages
+            self.on_event({'kind': 'compression_start', 'after': after})
+            traces = working.compress(self.client, self.trace)
+            self.on_event({'kind': 'compression', 'event': {
+                'after_visible_messages': after, 'trace': deepcopy(traces),
+                'summary': deepcopy(working.summary), 'tail_visible_messages': working.visible_messages}})
+
+        compact()
         turn = [{'role': 'user', 'content': dumps({'message': text})}]
         used_ids = set()
         for step in range(1, self.max_steps + 1):
@@ -48,7 +58,7 @@ class Agent:
         else:
             raise ProtocolError(f'За {self.max_steps} шагов агент не завершил ответ; ход не сохранён.')
         working.append_turn(turn)
-        working.compress(self.client, self.trace)
+        compact()
         if self.path:
             working.save(self.path)
         self.context = working
