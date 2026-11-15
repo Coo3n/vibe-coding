@@ -116,3 +116,9 @@ def invoke(client, messages, kind, traces, tools=None):
         raise
     finally:
         row['seconds'] = time.perf_counter() - started
+        tracker = getattr(client, 'token_tracker', None)
+        if tracker is not None:
+            row['progress'] = tracker.record(row, 'summary' if kind == 'summary' else client.phase)
+        callback = getattr(client, 'on_trace', None)
+        if callback is not None:
+            callback(row)

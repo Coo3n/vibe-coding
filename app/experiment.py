@@ -59,9 +59,9 @@ def summarize(report):
                                        compact.get(f['id']) and not compact[f['id']].get('correct')]
 
 
-def run_experiment(client, directory, on_event=None, keep_last=8, compress_every=10, turns=30):
-    if type(turns) is not int or turns not in (15, 30):
-        raise ValueError('Для эксперимента выберите 15 или 30 ходов.')
+def run_experiment(client, directory, on_event=None, keep_last=8, compress_every=20, turns=50):
+    if type(turns) is not int or turns not in (15, 30, 50):
+        raise ValueError('Для эксперимента выберите 15, 30 или 50 ходов.')
     prompts = PROMPTS[:turns]
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=False)
@@ -81,6 +81,7 @@ def run_experiment(client, directory, on_event=None, keep_last=8, compress_every
 
     save()  # Record the answer key before generating any dialogue.
     try:
+        client.phase = 'dialogue'
         agent = Agent(client, Context(mode='full'), on_event=on_event)
         for number, prompt in enumerate(prompts, 1):
             on_event({'kind': 'dialogue', 'number': number, 'total': len(prompts), 'prompt': prompt})
@@ -94,6 +95,7 @@ def run_experiment(client, directory, on_event=None, keep_last=8, compress_every
                 row['trace'] = deepcopy(agent.trace)
                 save()
 
+        client.phase = 'summary'
         compressed = Context(keep_last=keep_last, compress_every=compress_every)
         for number, row in enumerate(report['dialogue'], 1):
             compressed.append_turn(row['turn'])
@@ -116,6 +118,7 @@ def run_experiment(client, directory, on_event=None, keep_last=8, compress_every
                             'compressions': len(report['compressions'])}
         save()
         for mode, context in (('full', agent.context), ('compressed', compressed)):
+            client.phase = mode
             for number, fact in enumerate(FACTS, 1):
                 on_event({'kind': 'probe_start', 'mode': mode, 'number': number, 'fact': fact})
                 # No tools, no answer key, no other probes in this request.

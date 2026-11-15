@@ -8,6 +8,8 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
+from .tokens import TokenTracker
+
 
 class ClientError(RuntimeError):
     pass
@@ -43,6 +45,9 @@ class ChatClient:
         self.timeout = timeout
         self.model_name = settings['LLM_MODEL']
         self.opener = build_opener(NoRedirects())
+        self.token_tracker = TokenTracker()
+        self.phase = 'chat'
+        self.on_trace = None
 
     def complete(self, messages, schema, name, tools=None):
         payload = {'model': self.settings['LLM_MODEL'], 'messages': messages,

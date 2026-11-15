@@ -72,7 +72,7 @@ def validate_turn(turn):
 
 
 class Context:
-    def __init__(self, mode='compressed', keep_last=8, compress_every=10):
+    def __init__(self, mode='compressed', keep_last=8, compress_every=20):
         if mode not in ('full', 'compressed'):
             raise ContextError('Режим: full или compressed.')
         if any(type(n) is not int or n <= 0 or n % 2 for n in (keep_last, compress_every)):

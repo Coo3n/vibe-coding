@@ -19,7 +19,7 @@ from .experiment import run_experiment
 from .protocol import ProtocolError, dumps
 from .report import number, write_report
 from .scenario import FACTS
-from .tokens import usage_total
+from .tokens import PHASES, usage_total
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -119,6 +119,38 @@ class Terminal:
         self.console.print(Text(f"  API: {stats['requests']} · вход {number(stats['prompt_tokens'])} · "
                                 f"выход {number(stats['completion_tokens'])} · всего {number(stats['total_tokens'])}", style='dim'))
 
+    def token_step(self, trace):
+        progress = trace.get('progress')
+        if progress is None:
+            return
+        delta = progress['input_delta']
+        if delta is None:
+            change = '— нет предыдущего значения'
+        elif delta > 0:
+            change = '↑ +' + number(delta)
+        elif delta < 0:
+            change = '↓ −' + number(-delta)
+        else:
+            change = '= 0'
+        is_summary = trace.get('kind') == 'summary'
+        title = (f"ТОКЕНЫ · API #{progress['request_number']} · "
+                 f"{PHASES.get(progress['phase'], progress['phase'])}")
+        table = Table.grid(padding=(0, 2))
+        table.add_column(style='dim')
+        table.add_column(justify='right', style=COLORS['user'])
+        table.add_column()
+        table.add_row('Вход запроса', number(progress['prompt_tokens']),
+                      Text(change + ' к прошлому запросу этапа', style=COLORS['tool'] if delta and delta > 0 else COLORS['answer']))
+        table.add_row('Выход модели', number(progress['completion_tokens']), '')
+        cost = progress['request_tokens']
+        table.add_row('Расход этого summary' if is_summary else 'Расход этого запроса',
+                      '?' if cost is None else '+' + number(cost), 'вход + выход')
+        table.add_row('Все summary за запуск' if is_summary else 'Накоплено на этапе',
+                      number(progress['phase_total']), 'токенов потрачено')
+        table.add_row('Накоплено за запуск', number(progress['run_total']), 'все этапы, включая summary')
+        self.console.print(Panel(table, title=Text(title, style='bold'), title_align='left',
+                                 box=box.ROUNDED, border_style=COLORS['tool']))
+
     def comparison(self, report):
         table = Table(title='ПАМЯТЬ · 20 заранее заданных деталей', box=box.SIMPLE_HEAVY)
         for heading in ('Деталь', 'Эталон', 'Без сжатия', 'Со сжатием'):
@@ -203,12 +235,13 @@ def main():
     parser.add_argument('--env', type=Path, default=ROOT / '.env')
     parser.add_argument('--model', help='Маршрут модели, иначе LLM_MODEL из .env')
     parser.add_argument('--demo', action='store_true', help='Автономный эксперимент: диалог, summary и проверки памяти')
-    parser.add_argument('--turns', type=int, choices=(15, 30), default=30,
-                        help='Ходов user+agent: 30 = 60 сообщений (по умолчанию), 15 = 30 сообщений')
+    parser.add_argument('--turns', type=int, choices=(15, 30, 50), default=50,
+                        help='Ходов user+agent: 50 = 100 сообщений (по умолчанию), 30 = 60, 15 = 30')
     parser.add_argument('--chat', action='store_true', help='Ручной чат вместо меню')
     parser.add_argument('--mode', choices=('full', 'compressed'), default='compressed')
     parser.add_argument('--keep-last', type=int, default=8)
-    parser.add_argument('--compress-every', type=int, default=10)
+    parser.add_argument('--compress-every', type=int, default=20,
+                        help='Сжимать порцию из N старых видимых сообщений (по умолчанию 20)')
     parser.add_argument('--output-dir', type=Path, help='Новая папка результатов эксперимента')
     parser.add_argument('--session', type=Path, help='Файл ручного чата')
     args = parser.parse_args()
@@ -223,6 +256,7 @@ def main():
         if args.model:
             settings['LLM_MODEL'] = args.model
         client = ChatClient(settings)
+        client.on_trace = terminal.token_step
         if not args.demo and not args.chat:
             terminal.panel('ДЕНЬ 9 · ОВОЩНОЙ ПРИЛАВОК',
                            f'1 · Эксперимент: {args.turns * 2} сообщений, tools, summary, 20 проверок × 2\n'

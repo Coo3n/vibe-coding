@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from .context import atomic_json
+from .tokens import PHASES, progress_rows
 
 
 def number(value):
@@ -73,7 +74,19 @@ def write_report(report, directory):
              'Подробный учёт этапов находится в report.json.', '',
              '`?` означает неизвестный usage, не ноль. Кэшированные токены уже входят во вход. '
              'Стоимость в деньгах не рассчитывается. Один прогон не доказывает сохранение любых фактов.', '',
-             '## Сжатия', '']
+             '## Динамика токенов по каждому API-запросу', '',
+             'Δ входа — изменение размера входа относительно предыдущего запроса **того же этапа**. '
+             'Расход запроса — вход + выход. Накопленный расход не является размером контекста.', '',
+             '| API № | Этап | Вход | Δ входа | Выход | Расход запроса | Накоплено на этапе | Накоплено за запуск |',
+             '|---:|---|---:|---:|---:|---:|---:|---:|']
+    for progress in progress_rows(report):
+        delta = progress['input_delta']
+        change = '—' if delta is None else ('+' if delta >= 0 else '−') + number(abs(delta))
+        rows.append(f"| {progress['request_number']} | {PHASES[progress['phase']]} | "
+                    f"{number(progress['prompt_tokens'])} | {change} | {number(progress['completion_tokens'])} | "
+                    f"{number(progress['request_tokens'])} | {number(progress['phase_total'])} | "
+                    f"{number(progress['run_total'])} |")
+    rows += ['', '## Сжатия', '']
     for index, event in enumerate(report['compressions'], 1):
         rows += [f"### Summary {index} · после {event['after_visible_messages']} сообщений", '']
         for key, title in (('facts', 'Факты'), ('decisions', 'Решения'), ('open_questions', 'Открытые вопросы')):
