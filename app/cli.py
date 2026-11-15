@@ -180,9 +180,8 @@ class Terminal:
             self.console.print(Text.assemble(
                 (f"{label}  ", 'bold ' + color),
                 (f"вход {number(progress['prompt_tokens'])} ({short_delta})  ", 'dim'),
-                (f"+{number(progress['request_tokens'])}", 'bold ' + COLORS['tool']),
-                (f"  Σ этап {number(progress['phase_total'])}", 'bold ' + color),
-                (f"  Σ запуск {number(progress['run_total'])}", 'dim')))
+                (f"расход +{number(progress['request_tokens'])}", 'bold ' + COLORS['tool']),
+                (f"  всего за запуск {number(progress['run_total'])}", 'bold ' + color)))
             if phase == 'summary':
                 self.console.print(Text(f"  Вход {number(progress['prompt_tokens'])} + выход {number(progress['completion_tokens'])}"
                                         f" = стоимость summary {number(progress['request_tokens'])}. "
@@ -211,11 +210,24 @@ class Terminal:
         score = report['score'][mode]
         stats = report['usage'][mode + '_comparison']
         text = (f"Точные совпадения: {score['correct']}/{score['total']} · проверено {score['checked']}\n"
-                f"Расход теста: {number(stats['total_tokens'])} токенов")
+                f"Только проверка памяти{' + summary' if mode == 'compressed' else ''}: "
+                f"{number(stats['total_tokens'])} токенов (без создания диалога)")
         if mode == 'compressed':
             text += f" · из них summary {number(report['usage']['summary']['total_tokens'])} (уже включены)"
         self.panel('ИТОГ ТЕСТА 1 · БЕЗ СЖАТИЯ' if mode == 'full' else 'ИТОГ ТЕСТА 2 · СО СЖАТИЕМ',
                    text, 'user' if mode == 'full' else 'answer')
+
+    def run_cost(self, report):
+        usage = report['usage']
+        lines = [f"Создание диалога: {number(usage['preparation']['total_tokens'])}"]
+        if report['compressions']:
+            lines.append(f"Создание summary: {number(usage['summary']['total_tokens'])}")
+        if report['probes']['full']:
+            lines.append(f"Проверка памяти без сжатия: {number(usage['full_probes']['total_tokens'])}")
+        if report['probes']['compressed']:
+            lines.append(f"Проверка памяти со сжатием: {number(usage['compressed_probes']['total_tokens'])}")
+        lines.append('\nЭто полный расход: все запросы и ответы, каждый учтён один раз.')
+        self.panel(f"ВСЕГО ЗА ЗАПУСК · {number(usage['actual_run']['total_tokens'])} ТОКЕНОВ", '\n'.join(lines))
 
     def comparison(self, report):
         case = report.get('case', 'both')
@@ -241,11 +253,12 @@ class Terminal:
             self.console.print(Text('✓ Все контрольные детали совпали.', style='bold ' + COLORS['answer']))
         if case != 'both':
             self.case_result(report, case)
+            self.run_cost(report)
             self.console.print(Text('Для сравнения и расчёта экономии выберите «Оба теста». '
                                     'Несовпадение формулировки требует сверки.', style='dim'))
             return
         scores = report['score']
-        comparison = Table(title='ДВА СЛУЧАЯ · одинаковые 20 вопросов', box=box.SIMPLE_HEAVY)
+        comparison = Table(title='СРАВНЕНИЕ ПРОВЕРОК · без стоимости создания диалога', box=box.SIMPLE_HEAVY)
         comparison.add_column('Показатель')
         comparison.add_column('1. Без сжатия', justify='right')
         comparison.add_column('2. Со сжатием', justify='right')
@@ -253,7 +266,7 @@ class Terminal:
         comparison.add_row('Детали: точные совпадения',
                            f"{scores['full']['correct']}/20", f"{scores['compressed']['correct']}/20")
         for key, label in (('prompt_tokens', 'Входные токены'), ('completion_tokens', 'Выходные токены'),
-                           ('total_tokens', 'Всего токенов')):
+                            ('total_tokens', 'Проверки + summary')):
             comparison.add_row(label, number(report['usage']['full_comparison'][key]),
                                 number(report['usage']['compressed_comparison'][key]))
         comparison.add_row('Из них создание summary', '0', number(report['usage']['summary']['total_tokens']))
@@ -262,10 +275,11 @@ class Terminal:
                                 '  Сравниваем проверки одной готовой переписки. Общая подготовка учтена отдельно в report.json.\n'
                                 '  Несовпадение формулировки требует сверки: это не обязательно забытый факт.', style='dim'))
         saving = report['savings']
-        self.panel('ИТОГ', f"Экономия второго случая с учётом summary: {number(saving['tokens'])} токенов "
+        self.panel('ЭКОНОМИЯ ПРОВЕРОК', f"Экономия второго случая с учётом summary: {number(saving['tokens'])} токенов "
                    f"({saving['percent'] if saving['percent'] is not None else '?'}%).\n"
                    f"Статус: {report['status']}. Отсутствующий usage обозначен «?».",
-                   'answer' if report['status'] == 'completed' else 'error')
+                    'answer' if report['status'] == 'completed' else 'error')
+        self.run_cost(report)
 
 
 def chat(client, terminal, args):
