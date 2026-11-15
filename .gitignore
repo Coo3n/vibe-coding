@@ -1,0 +1,8 @@
+.env
+.venv/
+.idea/
+__pycache__/
+*.py[cod]
+.superpowers/
+data/session*.json
+results/local-*/
