@@ -203,8 +203,8 @@ def main():
     parser.add_argument('--env', type=Path, default=ROOT / '.env')
     parser.add_argument('--model', help='Маршрут модели, иначе LLM_MODEL из .env')
     parser.add_argument('--demo', action='store_true', help='Автономный эксперимент: диалог, summary и проверки памяти')
-    parser.add_argument('--turns', type=int, choices=(15, 30), default=15,
-                        help='Ходов user+agent: 15 = 30 сообщений по ТЗ (по умолчанию), 30 = 60 сообщений')
+    parser.add_argument('--turns', type=int, choices=(15, 30), default=30,
+                        help='Ходов user+agent: 30 = 60 сообщений (по умолчанию), 15 = 30 сообщений')
     parser.add_argument('--chat', action='store_true', help='Ручной чат вместо меню')
     parser.add_argument('--mode', choices=('full', 'compressed'), default='compressed')
     parser.add_argument('--keep-last', type=int, default=8)
