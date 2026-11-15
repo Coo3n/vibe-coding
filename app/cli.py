@@ -192,7 +192,9 @@ def main():
     parser = argparse.ArgumentParser(description='День 9 · овощной агент, tool calling и JSON-summary')
     parser.add_argument('--env', type=Path, default=ROOT / '.env')
     parser.add_argument('--model', help='Маршрут модели, иначе LLM_MODEL из .env')
-    parser.add_argument('--demo', action='store_true', help='30 сообщений, 20 деталей, сравнение двух контекстов')
+    parser.add_argument('--demo', action='store_true', help='Автономный эксперимент: диалог, summary и проверки памяти')
+    parser.add_argument('--turns', type=int, choices=(15, 30), default=30,
+                        help='Ходов user+agent: 15 = 30 сообщений, 30 = 60 сообщений (по умолчанию)')
     parser.add_argument('--chat', action='store_true', help='Ручной чат вместо меню')
     parser.add_argument('--mode', choices=('full', 'compressed'), default='compressed')
     parser.add_argument('--keep-last', type=int, default=8)
@@ -213,7 +215,7 @@ def main():
         client = ChatClient(settings)
         if not args.demo and not args.chat:
             terminal.panel('ДЕНЬ 9 · ОВОЩНОЙ ПРИЛАВОК',
-                           '1 · Эксперимент: 30 сообщений, tools, два summary, 20 проверок × 2\n'
+                           f'1 · Эксперимент: {args.turns * 2} сообщений, tools, summary, 20 проверок × 2\n'
                            '2 · Ручной чат со сжатием\n3 · Ручной чат без сжатия\n0 · Выход')
             choice = terminal.console.input('Выберите режим › ').strip()
             if choice == '0':
@@ -232,7 +234,7 @@ def main():
             terminal.panel('ФАКТЫ ЗАДАНЫ ЗАРАНЕЕ', '\n'.join(f"{i}. {f['label']}: {f['expected']}"
                            for i, f in enumerate(FACTS, 1)), 'user')
             with terminal.waiting('Эксперимент · реальные запросы API'):
-                report = run_experiment(client, directory, terminal.event, args.keep_last, args.compress_every)
+                report = run_experiment(client, directory, terminal.event, args.keep_last, args.compress_every, args.turns)
             write_report(report, directory)
             terminal.comparison(report)
             terminal.panel('ОТЧЁТЫ', f'{directory / "report.md"}\n{directory / "report.json"}')

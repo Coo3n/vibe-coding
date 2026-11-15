@@ -49,7 +49,8 @@ def summarize(report):
                                 usage['compressed_comparison']['total_tokens'])
     report['score'] = {mode: {'correct': sum(p.get('evaluation', {}).get('correct', False)
                                            for p in report['probes'][mode]),
-                             'checked': len(report['probes'][mode]), 'total': len(FACTS)}
+                             'checked': sum('evaluation' in p for p in report['probes'][mode]),
+                             'attempted': len(report['probes'][mode]), 'total': len(FACTS)}
                        for mode in ('full', 'compressed')}
     full = {p['fact_id']: p.get('evaluation', {}) for p in report['probes']['full']}
     compact = {p['fact_id']: p.get('evaluation', {}) for p in report['probes']['compressed']}
@@ -58,7 +59,10 @@ def summarize(report):
                                        compact.get(f['id']) and not compact[f['id']].get('correct')]
 
 
-def run_experiment(client, directory, on_event=None, keep_last=8, compress_every=10):
+def run_experiment(client, directory, on_event=None, keep_last=8, compress_every=10, turns=30):
+    if type(turns) is not int or turns not in (15, 30):
+        raise ValueError('Для эксперимента выберите 15 или 30 ходов.')
+    prompts = PROMPTS[:turns]
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=False)
     on_event = on_event or (lambda event: None)
@@ -66,7 +70,7 @@ def run_experiment(client, directory, on_event=None, keep_last=8, compress_every
               'topic': 'Подготовка овощного онлайн-прилавка',
               'method': 'Общая реальная переписка; replay сжатия; независимые пробы. '
                         'Replay не измеряет генерацию второго диалога со сжатым контекстом.',
-              'settings': {'keep_last': keep_last, 'compress_every': compress_every},
+              'settings': {'keep_last': keep_last, 'compress_every': compress_every, 'turns': turns},
               'facts': deepcopy(FACTS), 'dialogue': [], 'compressions': [],
               'probes': {'full': [], 'compressed': []}}
 
@@ -78,8 +82,8 @@ def run_experiment(client, directory, on_event=None, keep_last=8, compress_every
     save()  # Record the answer key before generating any dialogue.
     try:
         agent = Agent(client, Context(mode='full'), on_event=on_event)
-        for number, prompt in enumerate(PROMPTS, 1):
-            on_event({'kind': 'dialogue', 'number': number, 'total': len(PROMPTS), 'prompt': prompt})
+        for number, prompt in enumerate(prompts, 1):
+            on_event({'kind': 'dialogue', 'number': number, 'total': len(prompts), 'prompt': prompt})
             row = {'number': number, 'prompt': {'message': prompt}, 'trace': [], 'turn': None}
             report['dialogue'].append(row)
             try:
@@ -105,7 +109,7 @@ def run_experiment(client, directory, on_event=None, keep_last=8, compress_every
                 finally:
                     save()
         report['contexts'] = {'full': agent.context.to_dict(), 'compressed': compressed.to_dict()}
-        report['counts'] = {'visible_messages': len(PROMPTS) * 2,
+        report['counts'] = {'visible_messages': len(prompts) * 2,
                             'full_records': len(agent.context.messages),
                             'compressed_tail_records': len(compressed.messages),
                             'compressed_tail_visible_messages': compressed.visible_messages,
