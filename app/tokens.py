@@ -60,7 +60,8 @@ def progress_rows(report):
     tracker = TokenTracker()
     stages = [('dialogue', report['dialogue']), ('summary', report['compressions']),
               ('full', report['probes']['full']), ('compressed', report['probes']['compressed'])]
-    for phase, rows in stages:
-        for row in rows:
-            for trace in row['trace']:
-                yield tracker.record(trace, phase)
+    traces = [(phase, trace) for phase, rows in stages for row in rows for trace in row['trace']]
+    if traces and all('progress' in trace for _, trace in traces):
+        traces.sort(key=lambda item: item[1]['progress']['request_number'])
+    for phase, trace in traces:
+        yield tracker.record(trace, phase)

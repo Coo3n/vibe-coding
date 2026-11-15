@@ -17,6 +17,9 @@ def cell(value):
 def write_report(report, directory):
     directory = Path(directory)
     turns = report['settings'].get('turns', 15)
+    case = report.get('case', 'both')
+    modes = ('full', 'compressed') if case == 'both' else (case,)
+    labels = {'full': 'Без сжатия', 'compressed': 'Со сжатием'}
     atomic_json(directory / 'report.json', report)
     rows = ['# День 9 · Овощной онлайн-прилавок', '',
             f"Статус: **{report['status']}**. Модель API: `{report['model']}`.", '',
@@ -31,41 +34,49 @@ def write_report(report, directory):
         rows += ['**Ошибка / неполный прогон:** ' + report['error'], '']
     if 'counts' in report:
         counts = report['counts']
-        rows += [f"Сжатий: {counts['compressions']}; записей полной истории: {counts['full_records']}; "
-                 f"в хвосте: {counts['compressed_tail_records']} записей / "
-                 f"{counts['compressed_tail_visible_messages']} видимых сообщений.", '']
-    rows += ['## Память', '', '| Деталь | Эталон | Без сжатия | Со сжатием |',
-             '|---|---|---|---|']
+        rows += [f"Сжатий: {counts['compressions']}; записей полной истории: {counts['full_records']}.", '']
+        if counts['compressed_tail_records'] is not None:
+            rows += [f"В хвосте: {counts['compressed_tail_records']} записей / "
+                     f"{counts['compressed_tail_visible_messages']} видимых сообщений.", '']
+    rows += ['## Память', '', '| Деталь | Эталон | ' + ' | '.join(labels[mode] for mode in modes) + ' |',
+             '|---|---|' + '---|' * len(modes)]
     probes = {mode: {row['fact_id']: row for row in report['probes'][mode]} for mode in ('full', 'compressed')}
     for fact in report['facts']:
         values = []
-        for mode in ('full', 'compressed'):
+        for mode in modes:
             evaluation = probes[mode].get(fact['id'], {}).get('evaluation')
             if evaluation is None:
                 values.append('— не проверено')
             else:
                 mark = {'correct': '✓', 'missing': 'не вспомнил', 'mismatch': '≠ требует сверки'}[evaluation['status']]
                 values.append(f"{cell(evaluation['value'])} · {mark}")
-        rows.append(f"| {fact['label']} | {cell(fact['expected'])} | {values[0]} | {values[1]} |")
+        rows.append(f"| {fact['label']} | {cell(fact['expected'])} | " + ' | '.join(values) + ' |')
     rows += ['', 'Оценка: нормализованное точное совпадение с заранее заданными допустимыми значениями. '
              'Другие формулировки помечаются «требует сверки», а не автоматически объявляются забытыми.', '']
-    for mode, label in (('full', 'Без сжатия'), ('compressed', 'Со сжатием')):
+    for mode in modes:
         score = report['score'][mode]
-        rows.append(f"- {label}: **{score['correct']}/{score['total']}**; выполнено {score['checked']} проверок.")
+        rows.append(f"- {labels[mode]}: **{score['correct']}/{score['total']}**; выполнено {score['checked']} проверок.")
     lost = report['lost_after_compression']
-    rows += ['', 'Детали, прошедшие без сжатия, но не прошедшие со сжатием: ' + (', '.join(lost) if lost else 'не обнаружены в выполненных проверках') + '.',
-             '', '## Два случая: без сжатия и со сжатием', '',
-             '| Показатель | 1. Без сжатия | 2. Со сжатием |', '|---|---:|---:|',
-             '| Контекст каждого вопроса | Вся переписка | Summary + хвост |']
+    if case == 'both':
+        rows += ['', 'Детали, прошедшие без сжатия, но не прошедшие со сжатием: ' +
+                 (', '.join(lost) if lost else 'не обнаружены в выполненных проверках') + '.']
+    rows += ['', '## Расход выбранных тестов', '', '| Показатель | ' + ' | '.join(labels[m] for m in modes) + ' |',
+             '|---|' + '---:|' * len(modes), '| Контекст каждого вопроса | ' +
+             ' | '.join('Вся переписка' if m == 'full' else 'Summary + хвост' for m in modes) + ' |']
     for key, label in (('prompt_tokens', 'Входные токены'), ('completion_tokens', 'Выходные токены'),
                        ('total_tokens', 'Всего токенов')):
-        rows.append(f"| {label} | {number(report['usage']['full_comparison'][key])} | "
-                    f"{number(report['usage']['compressed_comparison'][key])} |")
-    rows += [f"| Из них создание summary | 0 | {number(report['usage']['summary']['total_tokens'])} |", '',
-             '**Summary уже включено в итог второго случая.** Это не отдельный режим и не дополнительная сумма к итогу.']
+        rows.append(f"| {label} | " + ' | '.join(number(report['usage'][m + '_comparison'][key]) for m in modes) + ' |')
+    if 'compressed' in modes:
+        rows += ['| Из них создание summary | ' + ' | '.join(
+            '0' if m == 'full' else number(report['usage']['summary']['total_tokens']) for m in modes) + ' |', '',
+                 '**Summary уже включено в итог теста со сжатием.** Повторно прибавлять его не нужно.']
     saving = report['savings']
-    rows += ['', f"Экономия на проверках **с учётом summary**: {number(saving['tokens'])} токенов "
-             f"({saving['percent'] if saving['percent'] is not None else '?'}%).", '',
+    if case == 'both':
+        rows += ['', f"Экономия на проверках **с учётом summary**: {number(saving['tokens'])} токенов "
+                 f"({saving['percent'] if saving['percent'] is not None else '?'}%)."]
+    else:
+        rows += ['', 'Выполнен один выбранный тест. Для расчёта экономии запустите оба теста на одной переписке (--case both).']
+    rows += ['',
              'Это измерение повторных запросов к одному готовому диалогу, а не экономии '
              'при генерации второго независимого диалога. '
              f"Общая подготовка переписки: {number(report['usage']['preparation']['total_tokens'])} токенов; "

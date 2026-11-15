@@ -35,6 +35,9 @@ class Terminal:
     def __init__(self):
         self.console = Console()
         self.console.width = min(self.console.width, 110)
+        self.verbose = False
+        self.demo_mode = False
+        self.step_label = ''
 
     def panel(self, title, text, kind='answer'):
         self.console.print(Panel(Text(clean(text)), title=Text(clean(title), style='bold'),
@@ -71,6 +74,48 @@ class Terminal:
 
     def event(self, event):
         kind = event['kind']
+        if kind == 'preparation':
+            self.panel('ПОДГОТОВКА ДИАЛОГА', f"{event['messages']} сообщений · овощной прилавок · 20 контрольных деталей\n"
+                       'Создаём исходную переписку. Это подготовка, не отдельный тест.\n'
+                       'Ниже: вход и его изменение, расход запроса, накопленные токены.', 'user')
+            return
+        if kind == 'case_start':
+            full = event['mode'] == 'full'
+            self.console.rule(Text('ТЕСТ 1 · БЕЗ СЖАТИЯ' if full else 'ТЕСТ 2 · СО СЖАТИЕМ',
+                                   style='bold ' + COLORS['user' if full else 'answer']))
+            self.panel('ЧТО ПРОВЕРЯЕМ',
+                       '20 вопросов. В каждый запрос отправляем ВСЮ переписку.' if full else
+                       'Создаём summary, затем задаём 20 вопросов.\nВ запрос идёт SUMMARY + ХВОСТ. Стоимость summary включена.',
+                       'user' if full else 'answer')
+            return
+        if kind == 'case_complete':
+            if event['report'].get('case', 'both') == 'both':
+                self.case_result(event['report'], event['mode'])
+            return
+        if kind == 'dialogue':
+            self.step_label = f"Ход {event['number']:02}/{event['total']}"
+        elif kind == 'compression_start':
+            self.step_label = f"Summary после {event['after']} сообщений"
+        elif kind == 'probe_start':
+            self.step_label = f"Вопрос {event['number']:02}/20"
+        if self.demo_mode and not self.verbose:
+            if kind == 'tool':
+                error = event['result'].get('error')
+                self.console.print(Text(f"  {'✗' if error else '↳'} {event['name']} · "
+                                        f"{error or 'выполнен'}", style=COLORS['error' if error else 'tool']))
+            elif kind == 'compression':
+                self.console.print(Text(f"  ↳ История сжата · в хвосте {event['event']['tail_visible_messages']} сообщений",
+                                        style=COLORS['tool']))
+            elif kind == 'probe':
+                evaluation = event['probe']['evaluation']
+                if evaluation['correct']:
+                    self.console.print(Text(f"  ✓ {event['fact']['label']}", style=COLORS['answer']))
+                else:
+                    value = evaluation['value'] if evaluation['value'] is not None else 'не вспомнил'
+                    self.console.print(Text(f"  ! {event['fact']['label']}: {value}\n"
+                                            f"    Ожидалось: {event['fact']['expected']} · нужна сверка",
+                                            style=COLORS['error']))
+            return
         if kind == 'dialogue':
             self.panel(f"ВЫ · {event['number']}/{event['total']}", event['prompt'], 'user')
         elif kind == 'request':
@@ -101,11 +146,6 @@ class Terminal:
                        '\n'.join('• ' + s for s in data['summary']['facts']), 'tool')
             self.usage(data['trace'])
         elif kind == 'probe_start':
-            if event['number'] == 1:
-                self.panel('СЛУЧАЙ 1 · БЕЗ СЖАТИЯ' if event['mode'] == 'full' else 'СЛУЧАЙ 2 · СО СЖАТИЕМ',
-                           'Каждый вопрос получает всю исходную переписку.' if event['mode'] == 'full' else
-                           'Каждый вопрос получает summary и последние сообщения.\n'
-                           'Расход создания summary включён в итог этого случая.')
             label = 'полная история' if event['mode'] == 'full' else 'summary + хвост'
             self.console.print(Text(f"  → Память {event['number']}/20 · {label} · {event['fact']['label']}", style='dim'))
         elif kind == 'probe':
@@ -132,6 +172,22 @@ class Terminal:
             change = '↓ −' + number(-delta)
         else:
             change = '= 0'
+        if self.demo_mode and not self.verbose:
+            phase = progress['phase']
+            color = COLORS['tool' if phase == 'summary' else 'answer' if phase == 'compressed' else 'user']
+            short_delta = '—' if delta is None else f'{delta:+,}'.replace(',', ' ')
+            label = self.step_label or f"API #{progress['request_number']}"
+            self.console.print(Text.assemble(
+                (f"{label}  ", 'bold ' + color),
+                (f"вход {number(progress['prompt_tokens'])} ({short_delta})  ", 'dim'),
+                (f"+{number(progress['request_tokens'])}", 'bold ' + COLORS['tool']),
+                (f"  Σ этап {number(progress['phase_total'])}", 'bold ' + color),
+                (f"  Σ запуск {number(progress['run_total'])}", 'dim')))
+            if phase == 'summary':
+                self.console.print(Text(f"  Вход {number(progress['prompt_tokens'])} + выход {number(progress['completion_tokens'])}"
+                                        f" = стоимость summary {number(progress['request_tokens'])}. "
+                                        f"Все summary: {number(progress['phase_total'])}.", style=COLORS['tool']))
+            return
         is_summary = trace.get('kind') == 'summary'
         title = (f"ТОКЕНЫ · API #{progress['request_number']} · "
                  f"{PHASES.get(progress['phase'], progress['phase'])}")
@@ -151,20 +207,43 @@ class Terminal:
         self.console.print(Panel(table, title=Text(title, style='bold'), title_align='left',
                                  box=box.ROUNDED, border_style=COLORS['tool']))
 
+    def case_result(self, report, mode):
+        score = report['score'][mode]
+        stats = report['usage'][mode + '_comparison']
+        text = (f"Точные совпадения: {score['correct']}/{score['total']} · проверено {score['checked']}\n"
+                f"Расход теста: {number(stats['total_tokens'])} токенов")
+        if mode == 'compressed':
+            text += f" · из них summary {number(report['usage']['summary']['total_tokens'])} (уже включены)"
+        self.panel('ИТОГ ТЕСТА 1 · БЕЗ СЖАТИЯ' if mode == 'full' else 'ИТОГ ТЕСТА 2 · СО СЖАТИЕМ',
+                   text, 'user' if mode == 'full' else 'answer')
+
     def comparison(self, report):
-        table = Table(title='ПАМЯТЬ · 20 заранее заданных деталей', box=box.SIMPLE_HEAVY)
-        for heading in ('Деталь', 'Эталон', 'Без сжатия', 'Со сжатием'):
+        case = report.get('case', 'both')
+        modes = ('full', 'compressed') if case == 'both' else (case,)
+        labels = {'full': 'Без сжатия', 'compressed': 'Со сжатием'}
+        table = Table(title='ПАМЯТЬ · все детали' if self.verbose else 'ТРЕБУЮТ СВЕРКИ', box=box.SIMPLE_HEAVY)
+        for heading in ('Деталь', 'Эталон', *(labels[mode] for mode in modes)):
             table.add_column(heading)
         probes = {mode: {p['fact_id']: p for p in report['probes'][mode]} for mode in ('full', 'compressed')}
         for fact in report['facts']:
+            if not self.verbose and all(probes[mode].get(fact['id'], {}).get('evaluation', {}).get('correct') for mode in modes):
+                continue
             cells = []
-            for mode in ('full', 'compressed'):
+            for mode in modes:
                 evaluation = probes[mode].get(fact['id'], {}).get('evaluation')
-                value = '—' if evaluation is None else str(evaluation['value'])
+                value = 'не проверено' if evaluation is None else str(evaluation['value']) if evaluation['value'] is not None else 'не вспомнил'
                 mark = '' if evaluation is None else '✓ ' if evaluation['correct'] else '≠ '
                 cells.append(Text(clean(mark + value), style='green' if evaluation and evaluation['correct'] else 'yellow'))
             table.add_row(Text(fact['label']), Text(fact['expected']), *cells)
-        self.console.print(table)
+        if table.row_count:
+            self.console.print(table)
+        else:
+            self.console.print(Text('✓ Все контрольные детали совпали.', style='bold ' + COLORS['answer']))
+        if case != 'both':
+            self.case_result(report, case)
+            self.console.print(Text('Для сравнения и расчёта экономии выберите «Оба теста». '
+                                    'Несовпадение формулировки требует сверки.', style='dim'))
+            return
         scores = report['score']
         comparison = Table(title='ДВА СЛУЧАЯ · одинаковые 20 вопросов', box=box.SIMPLE_HEAVY)
         comparison.add_column('Показатель')
@@ -235,6 +314,9 @@ def main():
     parser.add_argument('--env', type=Path, default=ROOT / '.env')
     parser.add_argument('--model', help='Маршрут модели, иначе LLM_MODEL из .env')
     parser.add_argument('--demo', action='store_true', help='Автономный эксперимент: диалог, summary и проверки памяти')
+    parser.add_argument('--case', choices=('full', 'compressed', 'both'),
+                        help='Автотест: full — без сжатия, compressed — со сжатием, both — оба')
+    parser.add_argument('--verbose', action='store_true', help='Показать полные реплики, инструменты и summary')
     parser.add_argument('--turns', type=int, choices=(15, 30, 50), default=50,
                         help='Ходов user+agent: 50 = 100 сообщений (по умолчанию), 30 = 60, 15 = 30')
     parser.add_argument('--chat', action='store_true', help='Ручной чат вместо меню')
@@ -245,11 +327,14 @@ def main():
     parser.add_argument('--output-dir', type=Path, help='Новая папка результатов эксперимента')
     parser.add_argument('--session', type=Path, help='Файл ручного чата')
     args = parser.parse_args()
+    if args.case:
+        args.demo = True
     if args.demo and args.chat:
         parser.error('Выберите --demo или --chat.')
     if args.output_dir and not args.demo:
         parser.error('--output-dir используется с --demo.')
     terminal = Terminal()
+    terminal.verbose = args.verbose
     try:
         Context(args.mode, args.keep_last, args.compress_every)
         settings = load_settings(args.env)
@@ -259,28 +344,33 @@ def main():
         client.on_trace = terminal.token_step
         if not args.demo and not args.chat:
             terminal.panel('ДЕНЬ 9 · ОВОЩНОЙ ПРИЛАВОК',
-                           f'1 · Эксперимент: {args.turns * 2} сообщений, tools, summary, 20 проверок × 2\n'
-                           '2 · Ручной чат со сжатием\n3 · Ручной чат без сжатия\n0 · Выход')
+                           f'Автоматические тесты · {args.turns * 2} сообщений · 20 контрольных деталей\n\n'
+                           '1 · Тест БЕЗ сжатия\n2 · Тест СО сжатием\n3 · Оба теста и сравнение\n\n'
+                           '4 · Ручной чат со сжатием\n5 · Ручной чат без сжатия\n0 · Выход')
             choice = terminal.console.input('Выберите режим › ').strip()
             if choice == '0':
                 return 0
-            if choice not in ('1', '2', '3'):
-                raise ValueError('Выберите 0, 1, 2 или 3.')
-            args.demo = choice == '1'
-            args.mode = 'full' if choice == '3' else 'compressed'
+            if choice not in ('1', '2', '3', '4', '5'):
+                raise ValueError('Выберите пункт от 0 до 5.')
+            args.demo = choice in ('1', '2', '3')
+            args.case = {'1': 'full', '2': 'compressed', '3': 'both'}.get(choice)
+            args.mode = 'full' if choice == '5' else 'compressed'
         if args.demo:
+            terminal.demo_mode = True
+            args.case = args.case or 'both'
             directory = args.output_dir or ROOT / 'results' / ('local-day9-' + datetime.now().strftime('%Y%m%d-%H%M%S-%f'))
-            terminal.panel('ЭКСПЕРИМЕНТ · ЧТО СРАВНИВАЕМ',
-                           f'Подготавливаем один диалог на {args.turns * 2} сообщений.\n'
-                           'Случай 1: без сжатия — вся переписка.\n'
-                           'Случай 2: со сжатием — summary + последние сообщения.\n'
-                           '20 вопросов к каждому контексту; ответы проверок не освежают память.\n'
-                           'Расход summary включён в сравнение. Всё общение с LLM — JSON.\n'
-                           f'Модель: {client.model_name} · N={args.keep_last} · порция={args.compress_every}')
-            terminal.panel('ФАКТЫ ЗАДАНЫ ЗАРАНЕЕ', '\n'.join(f"{i}. {f['label']}: {f['expected']}"
-                           for i, f in enumerate(FACTS, 1)), 'user')
+            title = {'full': 'ТЕСТ 1 · БЕЗ СЖАТИЯ', 'compressed': 'ТЕСТ 2 · СО СЖАТИЕМ',
+                     'both': 'ДВА АВТОМАТИЧЕСКИХ ТЕСТА'}[args.case]
+            terminal.panel(title, f'{args.turns * 2} сообщений · 20 контрольных деталей\n'
+                           f'Модель: {client.model_name} · последние {args.keep_last} · порция сжатия {args.compress_every}\n'
+                           'Синий — без сжатия · зелёный — со сжатием · жёлтый — summary\n'
+                           'Красный — ошибка или ответ для сверки. Подробности: --verbose и отчёты.')
+            if terminal.verbose:
+                terminal.panel('ФАКТЫ ЗАДАНЫ ЗАРАНЕЕ', '\n'.join(f"{i}. {f['label']}: {f['expected']}"
+                               for i, f in enumerate(FACTS, 1)), 'user')
             with terminal.waiting('Эксперимент · реальные запросы API'):
-                report = run_experiment(client, directory, terminal.event, args.keep_last, args.compress_every, args.turns)
+                report = run_experiment(client, directory, terminal.event, args.keep_last, args.compress_every,
+                                        args.turns, args.case)
             write_report(report, directory)
             terminal.comparison(report)
             terminal.panel('ОТЧЁТЫ', f'{directory / "report.md"}\n{directory / "report.json"}')

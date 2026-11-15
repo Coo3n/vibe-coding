@@ -45,13 +45,16 @@ def summarize(report):
              'compressed_total': usage_total(preparation + compression + probes['compressed']),
              'actual_run': usage_total(preparation + compression + probes['full'] + probes['compressed'])}
     report['usage'] = usage
-    report['savings'] = savings(usage['full_comparison']['total_tokens'],
-                                usage['compressed_comparison']['total_tokens'])
     report['score'] = {mode: {'correct': sum(p.get('evaluation', {}).get('correct', False)
                                            for p in report['probes'][mode]),
                              'checked': sum('evaluation' in p for p in report['probes'][mode]),
                              'attempted': len(report['probes'][mode]), 'total': len(FACTS)}
                        for mode in ('full', 'compressed')}
+    comparable = (report.get('case', 'both') == 'both' and
+                  all(report['score'][mode]['checked'] == len(FACTS) for mode in ('full', 'compressed')))
+    report['savings'] = (savings(usage['full_comparison']['total_tokens'],
+                                 usage['compressed_comparison']['total_tokens'])
+                         if comparable else savings(None, None))
     full = {p['fact_id']: p.get('evaluation', {}) for p in report['probes']['full']}
     compact = {p['fact_id']: p.get('evaluation', {}) for p in report['probes']['compressed']}
     report['lost_after_compression'] = [f['id'] for f in FACTS
@@ -59,14 +62,16 @@ def summarize(report):
                                        compact.get(f['id']) and not compact[f['id']].get('correct')]
 
 
-def run_experiment(client, directory, on_event=None, keep_last=8, compress_every=20, turns=50):
+def run_experiment(client, directory, on_event=None, keep_last=8, compress_every=20, turns=50, case='both'):
     if type(turns) is not int or turns not in (15, 30, 50):
         raise ValueError('Для эксперимента выберите 15, 30 или 50 ходов.')
+    if case not in ('full', 'compressed', 'both'):
+        raise ValueError('Выберите full, compressed или both.')
     prompts = PROMPTS[:turns]
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=False)
     on_event = on_event or (lambda event: None)
-    report = {'version': 1, 'started': datetime.now().astimezone().isoformat(), 'status': 'running',
+    report = {'version': 1, 'case': case, 'started': datetime.now().astimezone().isoformat(), 'status': 'running',
               'topic': 'Подготовка овощного онлайн-прилавка',
               'method': 'Общая реальная переписка; replay сжатия; независимые пробы. '
                         'Replay не измеряет генерацию второго диалога со сжатым контекстом.',
@@ -81,6 +86,7 @@ def run_experiment(client, directory, on_event=None, keep_last=8, compress_every
 
     save()  # Record the answer key before generating any dialogue.
     try:
+        on_event({'kind': 'preparation', 'messages': len(prompts) * 2})
         client.phase = 'dialogue'
         agent = Agent(client, Context(mode='full'), on_event=on_event)
         for number, prompt in enumerate(prompts, 1):
@@ -95,29 +101,37 @@ def run_experiment(client, directory, on_event=None, keep_last=8, compress_every
                 row['trace'] = deepcopy(agent.trace)
                 save()
 
-        client.phase = 'summary'
-        compressed = Context(keep_last=keep_last, compress_every=compress_every)
-        for number, row in enumerate(report['dialogue'], 1):
-            compressed.append_turn(row['turn'])
-            if compressed.visible_messages - keep_last >= compress_every:
-                event = {'after_visible_messages': number * 2, 'trace': [], 'summary': None}
-                report['compressions'].append(event)
-                on_event({'kind': 'compression_start', 'after': number * 2})
-                try:
-                    compressed.compress(client, event['trace'])
-                    event['summary'] = deepcopy(compressed.summary)
-                    event['tail_visible_messages'] = compressed.visible_messages
-                    on_event({'kind': 'compression', 'event': event})
-                finally:
-                    save()
-        report['contexts'] = {'full': agent.context.to_dict(), 'compressed': compressed.to_dict()}
+        report['contexts'] = {'full': agent.context.to_dict()}
         report['counts'] = {'visible_messages': len(prompts) * 2,
                             'full_records': len(agent.context.messages),
-                            'compressed_tail_records': len(compressed.messages),
-                            'compressed_tail_visible_messages': compressed.visible_messages,
-                            'compressions': len(report['compressions'])}
+                            'compressed_tail_records': None,
+                            'compressed_tail_visible_messages': None, 'compressions': 0}
         save()
-        for mode, context in (('full', agent.context), ('compressed', compressed)):
+        modes = ('full', 'compressed') if case == 'both' else (case,)
+        for mode in modes:
+            on_event({'kind': 'case_start', 'mode': mode})
+            context = agent.context
+            if mode == 'compressed':
+                client.phase = 'summary'
+                context = Context(keep_last=keep_last, compress_every=compress_every)
+                for number, row in enumerate(report['dialogue'], 1):
+                    context.append_turn(row['turn'])
+                    if context.visible_messages - keep_last >= compress_every:
+                        event = {'after_visible_messages': number * 2, 'trace': [], 'summary': None}
+                        report['compressions'].append(event)
+                        on_event({'kind': 'compression_start', 'after': number * 2})
+                        try:
+                            context.compress(client, event['trace'])
+                            event['summary'] = deepcopy(context.summary)
+                            event['tail_visible_messages'] = context.visible_messages
+                            on_event({'kind': 'compression', 'event': event})
+                        finally:
+                            save()
+                report['contexts']['compressed'] = context.to_dict()
+                report['counts'].update(compressed_tail_records=len(context.messages),
+                                        compressed_tail_visible_messages=context.visible_messages,
+                                        compressions=len(report['compressions']))
+                save()
             client.phase = mode
             for number, fact in enumerate(FACTS, 1):
                 on_event({'kind': 'probe_start', 'mode': mode, 'number': number, 'fact': fact})
@@ -136,6 +150,7 @@ def run_experiment(client, directory, on_event=None, keep_last=8, compress_every
                     on_event({'kind': 'probe', 'mode': mode, 'number': number, 'fact': fact, 'probe': probe})
                 finally:
                     save()
+            on_event({'kind': 'case_complete', 'mode': mode, 'report': report})
         tool_names = {message['tool_calls'][0]['function']['name']
                       for row in report['dialogue'] for message in row['turn'] if message.get('tool_calls')}
         report['tool_calls_observed'] = sorted(tool_names)
