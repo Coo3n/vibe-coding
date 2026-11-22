@@ -87,6 +87,8 @@ long-term. Всего 116 722 токена: 60 основных и 47 служе
 | После /remember и /reset | 2/2 | — |
 | Новый диалог без long-term | 0/4 | все четыре вопроса |
 
+[Запись демонстрации](results/demo.mp4)
+
 [Отчёт и разбор ответов](results/experiment-1/report.md) · [Полные ответы и метрики](results/experiment-1/report.json)
 
 #### Выводы
