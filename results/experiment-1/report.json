@@ -1,0 +1,13 @@
+{
+  "model": "glm-5.3",
+  "window": 4,
+  "status": "failed",
+  "runs": [],
+  "error": "API вернул HTTP 429.",
+  "tokens": 6316,
+  "main_calls": 1,
+  "side_tokens": 797,
+  "side_calls": 1,
+  "profile_side_tokens": 0,
+  "profile_side_calls": 0
+}
