@@ -1,0 +1,10 @@
+.env
+.venv/
+.idea/
+__pycache__/
+*.py[cod]
+results/local-*/
+data/task.json
+data/task.json.lock
+data/demo-task.json
+data/demo-task.json.lock
